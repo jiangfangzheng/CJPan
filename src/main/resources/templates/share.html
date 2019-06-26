@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>文件下载</title>
+    <script src="/js/jquery.min.js"></script>
+    <style>
+        .loading {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0%;
+            left: 0%;
+            line-height: 56px;
+            background: #000;
+            color: #fff;
+            padding-left: 60px;
+            font-size: 15px;
+            opacity: 0.7;
+            z-index: 9999;
+            filter: progid:DXImageTransform.Microsoft.Alpha(opacity=70);
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading" style="display: none;">
+        <div style="background:url(images/loading.gif) no-repeat 10px 50%;
+                width:56px;
+                height:56px;
+                position: absolute;
+                top:50%;
+                left:40%;
+                ">
+        </div>
+        <p style="position: absolute;top:50%;left:45%;margin: 0;">文件生成中，请稍候……</p>
+    </div>
+    <span id="downloadcode" th:text="${filecode}" style="display: none;" ></span>
+    <!--<span id="downloadlink" th:text="${link}" style="display: none;" ></span>-->
+    <script>
+        // 生成下载连接函数
+        function downloadFile(url, fileName_download) {
+            try {
+                var elemIF = document.createElement("a");
+                elemIF.src = url;
+                elemIF.href = url;
+                elemIF.download = fileName_download;
+                elemIF.style.display = "none";
+                document.body.appendChild(elemIF);
+                elemIF.click();
+            } catch (e) {
+                alert(e)
+            }
+            // window.open(url);
+        }
+        function isIE() { //ie?
+            if (!!window.ActiveXObject || "ActiveXObject" in window)
+                return true;
+            else
+                return false;
+        }
+        $(function(){
+            // 不支持ie浏览器
+            if(isIE()==true){
+                alert("不支持ie内核的浏览器下载，请使用Chrome内核的浏览器，现在为您退出！");
+                window.opener=null;
+                window.open('','_self');
+                window.close();
+            }
+
+            $("#loading").show();
+            var nowcode = $("#downloadcode").text();
+            $.ajax({
+                type: "POST",
+                url: "/share",
+                data: {code: nowcode},
+                dataType: "json",
+                success: function (data) {
+                    if(data.success){
+                        $("#loading").hide();
+                        var nowLink = data.msg;
+                        var name_list = nowLink.split("/");
+                        var file_name = name_list[name_list.length-1];
+                        $("#loading").hide();
+                        downloadFile(nowLink,file_name);
+                    }
+                }
+            });
+
+        });
+
+    </script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,299 @@
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-cn" >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="description" content="武汉理工云盘" />
+	<title>理工花云</title>
+
+	<link rel="stylesheet" href="./css/jq22.css"/>
+
+	<link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
+	<script src="/js/jquery.min.js"></script>
+	<script src="/bootstrap/js/bootstrap.min.js"></script>
+
+</head>
+<style>
+	.blur {
+		filter: url(blur.svg#blur); /* FireFox, Chrome, Opera */
+
+		-webkit-filter: blur(7px); /* Chrome, Opera */
+		-moz-filter: blur(7px);
+		-ms-filter: blur(7px);
+		filter: blur(7px);
+
+
+		filter: progid:DXImageTransform.Microsoft.Blur(PixelRadius=7, MakeShadow=false); /* IE6~IE9 */
+	}
+	.little_title {
+		font-family: '微软雅黑';
+		font-size: 40px;
+		color: white;
+		bottom: 7%;
+		position: absolute;
+		margin-left:10%;
+		text-shadow: rgba(128,128,128,0.5) 2px 2px;
+	}
+	.carousel-fade .carousel-inner .item{
+		opacity:0.5;
+		transition:opacity 2s;
+		-webkit-transition:opacity 2s;
+		-moz-transition:opacity 2s;
+		-ms-transition:opacity 2s;
+		-o-transition:opacity 2s;
+	}
+	.carousel-fade .carousel-inner .active{ opacity: 1;}
+	.carousel-fade .carousel-inner .active.left,.carousel-fade .carousel-inner .active.right{left: 0;opacity: 0.5;}
+	.carousel-fade .carousel-inner .next.left,
+	.carousel-fade .carousel-inner .prev.right {opacity: 1;}
+
+	a{
+		cursor: pointer;
+	}
+
+</style>
+<body onkeydown="enterlogin();">
+<!-- begin -->
+<!--<div id="topTitleMask"-->
+	 <!--style="width: 100%;height:80px;background-color: rgba(128,128,128,0.8);-->
+	 <!--position: absolute;"-->
+	 <!--class="blur">-->
+<!--</div>-->
+<!--<div id="topTitle"-->
+	 <!--style="width: 100%;height:80px;background-color: rgba(255,255,255,0.6);-->
+	 <!--position: absolute;">-->
+<!--</div>-->
+<div style="position: absolute;margin-top: 5px;width: 100%">
+	<img src="/images/pan-top.png" style="max-height: 60px;display: inline-block;margin-left: 20px">
+	<span style="font-family: '微软雅黑';font-size: 20px;float: right;margin: 20px 30px 0px 0px;">
+		<a style="color: red;" data-toggle="modal" data-target="#ruleModal">严禁上传违规文件</a>
+		<!--<a style="color: white; padding-left: 25px;">使用说明</a>-->
+		<a style="color: white; padding-left: 25px;" href="http://59.69.101.206/" target="_blank">官方网站</a>
+		<a style="color: white; padding-left: 25px;">问题反馈</a>
+		<a style="color: white; padding-left: 25px;" data-toggle="modal" data-target="#donateDlg">捐助我们</a>
+	</span>
+</div>
+
+<div class="modal fade" id="donateDlg" role="dialog">
+	<div class="modal-dialog modal-lg" style="left: 0">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">捐助我们</h4>
+			</div>
+			<div class="modal-body" style="text-align: center;">
+				<img src="/images/cf_code.jpg" style="max-height: 350px;display: inline-block">
+				<img src="/images/jfz_code.jpg" style="max-height: 350px;display: inline-block">
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="ruleModal" role="dialog">
+	<div class="modal-dialog modal-lg" style="left: 0">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">理工花云V2.0.0版本说明</h4>
+			</div>
+			<div class="modal-body" >
+				1. 本版本为花云V2.1.0版本，云盘新增移动文件夹和激活码的功能，注册必须要激活才能用。<br/>
+				2. 新增文件图标功能，截拦IE浏览器功能和用户名提示功能。<br/>
+				3. 当前版本的云盘只面向皇家理工大学-武汉理工大学信息工程学院-热误差项目组的老师和学生开放。<br/>
+				4. 由于资源珍贵，与本项目无关的文件属于违规文件。<br/>
+				5. 本项目组成员可以使用云盘来存放各种资料，但请不要上传一些跟本项目组无关的文件。<br/>
+				6. 为了安全起见，目前超级管理员有管理云盘使用者上传文件的权限，一旦发现违规文件，将会被管理员删除，情节严重者，将会被销号。<br/>
+				7. 本云盘在校内有高速上传和高速下载的效果，但在校外仅有高速下载的效果，这是由于学校的限制。<br/>
+				8. 如果需要更多有趣、方便的云资源，可以在登录账户后点击右上方的捐助按钮，给两位开发者提供一些捐助，您的支持，是我们进步的动力哦！<br/>
+				9. 理工花云的版权归热误差项目组所有，侵权必究。<br/>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="formbackground" class="carousel slide carousel-fade" style="position:absolute; z-index:-1;width: 100%;height:100%;" data-ride="carousel" data-interval="5000">
+	<div class="carousel-inner" role="listbox">
+		<div class="item active">
+			<img id="pic001" src="images/bg1.jpg" style="width: 100%;height: 100%;" alt="First slide">
+			<p class="little_title">
+				<span>花云</span><br>
+				&nbsp;&nbsp;&nbsp;<span>遇见好时光</span>
+			</p>
+		</div>
+		<div class="item">
+			<img id="pic002" src="images/bg2.jpg" style="width: 100%;height: 100%;" alt="Second slide">
+			<p class="little_title">
+				<span>这是一个</span><br>
+				&nbsp;&nbsp;&nbsp;<span>面向理工大学生的云盘</span>
+			</p>
+		</div>
+		<div class="item">
+			<img id="pic003" src="images/bg3.jpg" style="width: 100%;height: 100%;" alt="Third slide">
+			<p class="little_title">
+				<span>高速下载</span><br>
+				&nbsp;&nbsp;&nbsp;<span>触手可及</span>
+			</p>
+		</div>
+		<div class="item">
+			<img id="pic004" src="images/bg4.jpg" style="width: 100%;height: 100%;" alt="Fourth slide">
+			<p class="little_title">
+				<span>随心随用</span><br>
+				&nbsp;&nbsp;&nbsp;<span>随传随到</span>
+			</p>
+		</div>
+	</div>
+</div>
+
+
+
+<div id="login" style="background-color: rgba(0,0,0,0);">
+	<div class="wrapper">
+		<div class="login" style="margin-top: 0px">
+			<!--<div style="display: inline-block;width: 60%;height: 100%"></div>-->
+			<form action="#" method="post" class="container offset1 loginform"
+				  style="display: inline-block; float: right; margin: 95px 40px 0px 0px">
+				<div id="owl-login">
+					<div class="hand"></div>
+					<div class="hand hand-r"></div>
+					<div class="arms">
+						<div class="arm"></div>
+						<div class="arm arm-r"></div>
+					</div>
+				</div>
+				<div class="pad">
+					<!--<input type="hidden" name="_csrf" value="9IAtUxV2CatyxHiK2LxzOsT6wtBE6h8BpzOmk="/>-->
+					<div class="control-group">
+						<div class="controls">
+							<label for="userName" class="glyphicon glyphicon-user"></label>
+							<input id="userName" type="text" name="email" placeholder="用户名/邮箱" tabindex="1" autofocus="autofocus" class="form-control input-medium" />
+						</div>
+					</div>
+					<div class="control-group">
+						<div class="controls">
+							<label for="password" class="glyphicon glyphicon-briefcase"></label>
+							<input id="password" type="password" name="password" placeholder="密码" tabindex="2" class="form-control input-medium" />
+						</div>
+					</div>
+					<div class="control-group" id="activeCodeGroup" style="display: none;">
+						<div class="controls">
+							<label for="activeCode" class="glyphicon glyphicon-eye-open"></label>
+							<input id="activeCode" type="text" name="activeCode" placeholder="激活码" tabindex="1" autofocus="autofocus" class="form-control input-medium" />
+						</div>
+					</div>
+				</div>
+				<div class="form-actions">
+					<a id="forget_pw" tabindex="5" class="btn pull-left btn-link text-muted">忘记密码?</a>
+					<a id="doSignup" tabindex="6" class="btn btn-link text-muted">注册</a>
+					<button type="button" id="doLogin" tabindex="4" class="btn btn-primary">登录</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script>
+        $(function() {
+            // 禁用登录按钮
+            document.getElementById("doLogin").disabled=true;
+
+            $('#login #password').focus(function() {
+                $('#owl-login').addClass('password');
+            }).blur(function() {
+                $('#owl-login').removeClass('password');
+            });
+
+            $("#forget_pw").click(function (e) {
+				alert("密码忘了就没救了！")
+            });
+
+            $("#doSignup").click(function (e) {
+                if(document.getElementById("doSignup").innerText=="注册") {
+                    $("#userName").attr('placeholder',"请设置用户名");
+                    $("#password").attr('placeholder',"请设置密码");
+                    document.getElementById("doLogin").innerText="确认";
+                    document.getElementById("doSignup").innerText="取消注册";
+                    if($("#userName").val() != "" && $("#password").val() != ""){
+                        document.getElementById("doLogin").disabled=false;
+                    } else{
+                        document.getElementById("doLogin").disabled=true;
+                    }
+                    $("#activeCodeGroup").show();
+
+				} else{
+                    $("#userName").attr('placeholder',"用户名/邮箱");
+                    $("#password").attr('placeholder',"密码");
+                    document.getElementById("doLogin").innerText="登录";
+                    document.getElementById("doSignup").innerText="注册";
+                    if($("#userName").val() != "" && $("#password").val() != ""){
+                        document.getElementById("doLogin").disabled=false;
+                    } else{
+                        document.getElementById("doLogin").disabled=true;
+                    }
+                    $("#activeCodeGroup").hide();
+				}
+            });
+
+			$("#userName, #password").bind('input propertychange',function (e){
+                if($("#userName").val() != "" && $("#password").val() != ""){
+                    document.getElementById("doLogin").disabled=false;
+				} else{
+                    document.getElementById("doLogin").disabled=true;
+				}
+			});
+            //简单登录操作
+            $("#doLogin").click(function (e) {
+                if(document.getElementById("doLogin").innerText=="登录") {
+                    $.ajax({
+                        type: "POST",
+                        url: "/login",
+                        data: {
+                            "userName": $("#userName").val(),
+                            "password": $("#password").val()
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.result == "1") {
+                                window.location.href = "/";
+                            } else if (data.result == "2") {
+                                alert("密码错误！");
+                            } else {
+                                alert("用户不存在或账号密码不能为空！");
+                            }
+                        }
+                    });
+                }
+                else {
+                    if($("#activeCode").val()==""){alert("请填写激活码！");return;}
+                    $.ajax({
+                        type: "POST",
+                        url: "/signin",
+                        data: {
+                            "userName": $("#userName").val(),
+                            "password": $("#password").val(),
+							"regcode" : $("#activeCode").val()
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.result == "1") {
+                                alert("注册成功，请重新登录！");
+                                window.location.href = '/';
+                            } else if (data.result == "0"){
+                                alert("用户已经存在，请登录或换一个用户名！");
+                            } else {alert("注册失败，激活码不正确！");}
+                        }
+                    });
+				}
+            });
+        });
+        //回车登录
+        function enterlogin(){
+            if (event.keyCode == 13){
+                event.returnValue=false;
+                event.cancel = true;
+                if($("#userName").val() != "" && $("#password").val() != "") {
+                    $("#doLogin").click();
+                }
+            }
+        }
+	</script>
+</div>
+<!-- end -->
+</body>
+</html>

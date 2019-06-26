@@ -9,6 +9,7 @@ public class FileMsg {
     private String link;
     private String size;
     private String time;
+    private String description;
 
     public String getSize() {
         return size;
@@ -40,5 +41,13 @@ public class FileMsg {
 
     public void setTime(String time) {
         this.time = time;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

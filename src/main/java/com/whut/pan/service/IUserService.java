@@ -10,6 +10,8 @@ import java.util.Map;
  * @author Sandeepin
  */
 public interface IUserService {
+    int alterPassword(String userName,String secret);
+
     int add(User user);
 
     int update(User user);

@@ -37,4 +37,19 @@ public class IndexController {
         return "test";
     }
 
+    /**
+     * 测试页面
+     * @return 页面
+     */
+    @RequestMapping("/onlineplayer")
+    public ModelAndView onlineplayer(HttpServletRequest request, String fileName, String filePath){
+        User user = (User)request.getSession().getAttribute("user");
+        String userName = user.getUserName();
+        ModelAndView modelAndView = new ModelAndView("onlineplayer");
+        modelAndView.addObject("author", userName);
+        modelAndView.addObject("fileName", fileName);
+        modelAndView.addObject("filePath", filePath);
+        return modelAndView;
+    }
+
 }

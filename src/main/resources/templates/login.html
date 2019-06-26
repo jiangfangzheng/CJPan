@@ -1,7 +1,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="zh-cn" >
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="description" content="武汉理工云盘" />
+	<meta name="description" content="花云云盘" />
 	<title>理工花云</title>
 
 	<link rel="stylesheet" href="./css/jq22.css"/>
@@ -65,8 +65,8 @@
 	<img src="/images/pan-top.png" style="max-height: 60px;display: inline-block;margin-left: 20px">
 	<span style="font-family: '微软雅黑';font-size: 20px;float: right;margin: 20px 30px 0px 0px;">
 		<a style="color: red;" data-toggle="modal" data-target="#ruleModal">严禁上传违规文件</a>
-		<!--<a style="color: white; padding-left: 25px;">使用说明</a>-->
-		<a style="color: white; padding-left: 25px;" href="http://59.69.101.206/" target="_blank">官方网站</a>
+		<a style="color: white; padding-left: 25px;"  data-toggle="modal" data-target="#clientDlg">客户端下载</a>
+		<a style="color: white; padding-left: 25px;" href="/" target="_blank">官方网站</a>
 		<a style="color: white; padding-left: 25px;">问题反馈</a>
 		<a style="color: white; padding-left: 25px;" data-toggle="modal" data-target="#donateDlg">捐助我们</a>
 	</span>
@@ -87,23 +87,39 @@
 	</div>
 </div>
 
+<div class="modal fade" id="clientDlg" role="dialog">
+	<div class="modal-dialog modal-lg" style="width: fit-content;left: 0">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">客户端下载</h4>
+			</div>
+			<div class="modal-body" style="text-align: center;">
+				<div><img src="images/QRcode.png" style=";width: 160px;height: 160px;" /></div>
+				<a href="/downloadApk?filename=pan_0.1.0.apk&downloadPath=share" style="font-size: 18px;">下载客户端的apk</a>
+			</div>
+		</div>
+	</div>
+</div>
+
 <div class="modal fade" id="ruleModal" role="dialog">
 	<div class="modal-dialog modal-lg" style="left: 0">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal">&times;</button>
-				<h4 class="modal-title">理工花云V2.0.0版本说明</h4>
+				<h4 class="modal-title">花云云盘V2.0.0版本说明</h4>
 			</div>
 			<div class="modal-body" >
 				1. 本版本为花云V2.1.0版本，云盘新增移动文件夹和激活码的功能，注册必须要激活才能用。<br/>
-				2. 新增文件图标功能，截拦IE浏览器功能和用户名提示功能。<br/>
-				3. 当前版本的云盘只面向皇家理工大学-武汉理工大学信息工程学院-热误差项目组的老师和学生开放。<br/>
-				4. 由于资源珍贵，与本项目无关的文件属于违规文件。<br/>
-				5. 本项目组成员可以使用云盘来存放各种资料，但请不要上传一些跟本项目组无关的文件。<br/>
-				6. 为了安全起见，目前超级管理员有管理云盘使用者上传文件的权限，一旦发现违规文件，将会被管理员删除，情节严重者，将会被销号。<br/>
-				7. 本云盘在校内有高速上传和高速下载的效果，但在校外仅有高速下载的效果，这是由于学校的限制。<br/>
-				8. 如果需要更多有趣、方便的云资源，可以在登录账户后点击右上方的捐助按钮，给两位开发者提供一些捐助，您的支持，是我们进步的动力哦！<br/>
-				9. 理工花云的版权归热误差项目组所有，侵权必究。<br/>
+				2. 新增分享需要密码才能分享，断点上传的功能。<br/>
+				3. 新增文件图标功能，截拦IE浏览器功能和用户名提示功能。<br/>
+				4. 当前版本的云盘只面向异想家和国花两人开放。<br/>
+				5. 由于资源珍贵，与本项目无关的文件属于违规文件。<br/>
+				6. 本项目组成员可以使用云盘来存放各种资料，但请不要上传一些跟本项目组无关的文件。<br/>
+				7. 为了安全起见，目前超级管理员有管理云盘使用者上传文件的权限，一旦发现违规文件，将会被管理员删除，情节严重者，将会被销号。<br/>
+				8. 本云盘有高速上传和高速下载的效果。<br/>
+				9. 如果需要更多有趣、方便的云资源，可以在登录账户后点击右上方的捐助按钮，给两位开发者提供一些捐助，您的支持，是我们进步的动力哦！<br/>
+				10. 花云云盘的版权归异想家和国花所有，侵权必究。<br/>
 			</div>
 		</div>
 	</div>
@@ -122,7 +138,7 @@
 			<img id="pic002" src="images/bg2.jpg" style="width: 100%;height: 100%;" alt="Second slide">
 			<p class="little_title">
 				<span>这是一个</span><br>
-				&nbsp;&nbsp;&nbsp;<span>面向理工大学生的云盘</span>
+				&nbsp;&nbsp;&nbsp;<span>独一无二的云盘</span>
 			</p>
 		</div>
 		<div class="item">
@@ -141,8 +157,6 @@
 		</div>
 	</div>
 </div>
-
-
 
 <div id="login" style="background-color: rgba(0,0,0,0);">
 	<div class="wrapper">
@@ -185,9 +199,9 @@
 					<button type="button" id="doLogin" tabindex="4" class="btn btn-primary">登录</button>
 				</div>
 			</form>
+
 		</div>
 	</div>
-
 	<script>
         $(function() {
             // 禁用登录按钮
@@ -294,6 +308,8 @@
         }
 	</script>
 </div>
+
+
 <!-- end -->
 </body>
 </html>

@@ -7,6 +7,20 @@ import java.io.File;
  * 2018/2/11 0011
  */
 public class FileUtil {
+    /**
+     * 获得分片文件临时保存路径
+     * @param tempPath
+     * @param userName
+     * @param fileName
+     * @return
+     */
+    public static String getTempDir(String tempPath, String userName, String fileName) {
+        StringBuilder dir = new StringBuilder(tempPath);
+        dir.append("/").append(userName);
+        dir.append("/").append(DateUtil.getNowDate());
+        dir.append("/").append(fileName);
+        return dir.toString();
+    }
 
     /**
      * 删除文件，可以是文件或文件夹
@@ -102,13 +116,13 @@ public class FileUtil {
     }
 
     /**
-     * 文件重命名
+     * 文件移动
      *
-     * @param oldName 原来的文件名
-     * @param newName 新文件名
+     * @param oldName 要移动的文件
+     * @param newName 新的路径
      */
     public static boolean renameFile(String oldName, String newName) {
-        // 新的文件名和以前文件名不同时，才有必要进行重命名
+        // 路径
         if (!oldName.equals(newName)) {
             File oldfile = new File(oldName);
             File newfile = new File(newName);
@@ -124,7 +138,7 @@ public class FileUtil {
                 return oldfile.renameTo(newfile);
             }
         } else {
-            System.out.println("新文件名和旧文件名相同...");
+            System.out.println("移动路径没有变化相同...");
             return false;
         }
     }
@@ -182,14 +196,29 @@ public class FileUtil {
         return deleteDir(dir);
     }
 
+
+    public static String getPathLastSplash(String path){
+        String fileName=path;
+        if(path.contains("/")){
+             fileName=path.substring(path.lastIndexOf("/")+1);
+        }else{
+            fileName=path.substring(path.lastIndexOf("\\")+1);
+        }
+        return fileName;
+
+    }
+
     public static void main(String[] args) {
+        String fileName="D:\\home\\web\\upload\\upload\\files";
+
+        System.out.println( getPathLastSplash(fileName));
 //  // 删除单个文件
 //  String file = "c:/test/test.txt";
 //  DeleteFileUtil.deleteFile(file);
 //  System.out.println();
         // 删除一个目录
-        String dir = "D:/home/web/upload/upload/files";
-        FileUtil.deleteDirectory(dir);
+//        String dir = "D:/home/web/upload/upload/files";
+//        FileUtil.deleteDirectory(dir);
 //  System.out.println();
 //  // 删除文件
 //  dir = "c:/test/test0";

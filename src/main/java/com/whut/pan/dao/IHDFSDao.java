@@ -1,5 +1,6 @@
 package com.whut.pan.dao;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -32,4 +33,8 @@ public interface IHDFSDao {
     boolean append(String hdfsFile, String content) throws IOException;
 
     boolean moveHDFSFileOrDir(String hdfsFileOldName, String hdfsFileNewName) throws Exception;
+
+    List<String> listAllIncludeDirMsg(String key,String dir,List<String> names) throws IOException;
+
+
 }

@@ -13,6 +13,7 @@ public class User {
     private String levelType;
     private String email;
     private String phone;
+    private String alias;
 
     public User() {
         this.userName = "";
@@ -20,14 +21,16 @@ public class User {
         this.levelType = "1";
         this.email = "";
         this.phone = "";
+        this.alias="";
     }
 
-    public User(String userName, String passWord, String levelType, String email, String phone) {
+    public User(String userName, String passWord, String levelType, String email, String phone,String alias) {
         this.userName = userName;
         this.passWord = passWord;
         this.levelType = levelType;
         this.email = email;
         this.phone = phone;
+        this.alias=alias;
     }
 
     public User(String userName, String passWord) {
@@ -47,6 +50,13 @@ public class User {
         this.phone = phone;
     }
 
+    public String getAlias() {
+        return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
 
     public String getUserName() {
         return userName;

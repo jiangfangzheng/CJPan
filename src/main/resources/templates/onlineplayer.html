@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>在线播放</title>
+    <link rel="stylesheet" href="/dplayer/DPlayer.min.css"/>
+
+    <script src="/js/jquery.min.js"></script>
+    <script src="/dplayer/DPlayer.min.js"></script>
+</head>
+<body>
+    <div id="dplayer"></div>
+    <p id="author" th:text="${author}" style="display: none"></p>
+    <p id="fileName" th:text="${fileName}" style="display: none"></p>
+    <p id="filePath" th:text="${filePath}" style="display: none"></p>
+    <script>
+        $(function () {
+            // var dp = new DPlayer({
+            //     container: document.getElementById('dplayer'),
+            //     video: {
+            //         url: document.getElementById("filePath").innerText
+            //     },
+            // });
+            // alert(document.getElementById("filePath").innerText);
+            var dplayer = new DPlayer({
+                element: document.getElementById('dplayer'),
+                autoplay: true,
+                theme: '#FADFA3',
+                loop: false,
+                screenshot: true, //截屏
+                hotkey: false,
+                video: {  //视频源 包含不同分辨率源
+                    quality: [{
+                        name: '普清',
+                        url: document.getElementById("filePath").innerText
+                    }],
+                    defaultQuality: 0,
+                    pic: '',
+                    type: 'auto'
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>

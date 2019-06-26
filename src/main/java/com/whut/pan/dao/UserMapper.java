@@ -14,9 +14,13 @@ import java.util.Map;
 @Component
 @Mapper
 public interface UserMapper {
+    //更改密码
+    @Update("update pan_user set passWord=#{passWord} where username = #{userName}")
+    int alterSecret(User user);
+
 
     // 增添用户
-    @Insert("insert into pan_user(username, password, level, email, phone) values(#{userName},#{passWord},#{levelType},#{email},#{phone})")
+    @Insert("insert into pan_user(username, password, level, email, phone,alias) values(#{userName},#{passWord},#{levelType},#{email},#{phone},#{alias})")
     int add(User user);
 
     // 删除用户 By ID
@@ -28,7 +32,7 @@ public interface UserMapper {
     int deleteByUsernames(@Param("userNames") String[] userNames);
 
     // 更改用户 By用户名
-    @Update("update pan_user set password=#{passWord},level=#{levelType},email=#{email},phone=#{phone} where username = #{userName}")
+    @Update("update pan_user set password=#{passWord},level=#{levelType},email=#{email},phone=#{phone},alias=#{alias} where username = #{userName}")
     int update(User user);
 
     // 查询用户 By用户名
@@ -39,7 +43,8 @@ public interface UserMapper {
             @Result(property = "passWord", column = "password", javaType = String.class),
             @Result(property = "levelType", column = "level", javaType = String.class),
             @Result(property = "email", column = "email", javaType = String.class),
-            @Result(property = "phone", column = "phone", javaType = String.class)
+            @Result(property = "phone", column = "phone", javaType = String.class),
+            @Result(property = "alias", column = "alias", javaType = String.class)
     })
     User queryUserByUsername(@Param("userName") String userName);
 

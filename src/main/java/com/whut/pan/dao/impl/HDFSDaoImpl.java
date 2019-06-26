@@ -1,11 +1,13 @@
 package com.whut.pan.dao.impl;
 
 import com.whut.pan.dao.IHDFSDao;
+import com.whut.pan.domain.FileMsg;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.zookeeper.common.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.whut.pan.util.FileUtil.fileSizeToString;
+import static com.whut.pan.util.StringUtil.base64Decoder;
 import static com.whut.pan.util.SystemUtil.isWindows;
 
 /**
@@ -23,14 +26,17 @@ import static com.whut.pan.util.SystemUtil.isWindows;
  */
 @Component
 public class HDFSDaoImpl implements IHDFSDao {
+    private static String hdfsUrl ;
 
-    private static String hdfsUrl = "hdfs://127.0.0.1:9000";
-
-    static {
-        // 非Windows路径
-        if (!isWindows()) {
-            hdfsUrl = "hdfs://192.168.1.2:9000";
-        }
+    //    static {
+//        // 非Windows路径
+//        if (!isWindows()) {
+//            hdfsUrl = "hdfs://192.168.1.2:9000";
+//        }
+//    }
+    @Value("${hdfsUrl}")
+    public  void setHdfsUrl(String hdfsUrl) {
+        HDFSDaoImpl.hdfsUrl = hdfsUrl;
     }
 
     @Override
@@ -112,11 +118,14 @@ public class HDFSDaoImpl implements IHDFSDao {
                 String path = stats[i].getPath().toString();
                 String[] nameArr = path.split("/");
                 String name = nameArr[nameArr.length - 1];
-//                String size = fileSizeToString(stats[i].getLen());
-                String size = "Directory";
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String lastModTime = formatter.format(stats[i].getModificationTime());
-                names.add(name + "\t" + size + "\t" + lastModTime + "\t" + path);
+                if(!name.equals("userIcon")){
+                    //                String size = fileSizeToString(stats[i].getLen());
+                    String size = "Directory";
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String lastModTime = formatter.format(stats[i].getModificationTime());
+                    names.add(name + "\t" + size + "\t" + lastModTime + "\t" + path);
+                }
+
             } else if (stats[i].isSymlink()) {
                 // linux软连接 不处理
                 // names.add(stats[i].getPath().toString());
@@ -264,4 +273,54 @@ public class HDFSDaoImpl implements IHDFSDao {
     public boolean moveHDFSFileOrDir(String hdfsFileOldName, String hdfsFileNewName) throws Exception {
         return renameHDFSFile(hdfsFileOldName, hdfsFileNewName);
     }
+
+    //todo
+    @Override
+    public List<String> listAllIncludeDirMsg(String key,String dir,List<String> names) throws IOException {
+        if (StringUtils.isBlank(dir)) {
+            return new ArrayList<>();
+        }
+        dir = hdfsUrl + dir;
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(URI.create(dir), conf);
+        FileStatus[] stats = fs.listStatus(new Path(dir));
+        for (int i = 0; i < stats.length; ++i) {
+            if (stats[i].isFile()) {
+                // 常规文件 输出 文件名 大小 修改时间 完整路径
+                String path = stats[i].getPath().toString();
+                String[] nameArr = path.split("/");
+                String name=nameArr[nameArr.length - 1];
+                String nameDecoder = base64Decoder(name);
+                if(nameDecoder.toLowerCase().contains(key.trim().toLowerCase())){
+                    String size = fileSizeToString(stats[i].getLen());
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String lastModTime = formatter.format(stats[i].getModificationTime());
+                    names.add(name + "\t" + size + "\t" + lastModTime + "\t" + path);
+                }else{
+                    continue;
+                }
+            } else if (stats[i].isDirectory()) {
+                String path = stats[i].getPath().toString();
+                String[] nameArr = path.split("/");
+                String name=nameArr[nameArr.length - 1];
+                if(name.toLowerCase().contains(key.trim().toLowerCase())){
+                    if(!name.equals("userIcon")){
+                        String size = "Directory";
+                        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        String lastModTime = formatter.format(stats[i].getModificationTime());
+                        names.add(name + "\t" + size + "\t" + lastModTime + "\t" + path);
+                    }
+                }
+                fs.close();
+                listAllIncludeDirMsg(key,path.replace(hdfsUrl,""),names);
+            } else if (stats[i].isSymlink()) {
+                // linux软连接 不处理
+                // names.add(stats[i].getPath().toString());
+            }
+        }
+        fs.close();
+        return names;
+    }
+
+
 }

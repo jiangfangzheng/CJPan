@@ -24,7 +24,7 @@ public class WebInterceptor implements HandlerInterceptor {
         request.setAttribute("requestStartTime", startTime);
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Method method = handlerMethod.getMethod();
-//        System.out.println("用户ip:" + ip + ",访问目标:" + method.getDeclaringClass().getName() + ":" + method.getName());
+        System.out.println("用户ip:" + ip + ",访问目标:" + method.getDeclaringClass().getName() + ":" + method.getName());
 
         User user = (User) request.getSession().getAttribute("user");
         if (null == user) {
@@ -50,7 +50,7 @@ public class WebInterceptor implements HandlerInterceptor {
         if (executeTime > 1000) {
             System.out.println("[" + method.getDeclaringClass().getName() + "." + method.getName() + "] 执行耗时 : " + executeTime + "ms");
         } else {
-//            System.out.println("[" + method.getDeclaringClass().getSimpleName() + "." + method.getName() + "] 执行耗时 : " + executeTime + "ms");
+            System.out.println("[" + method.getDeclaringClass().getSimpleName() + "." + method.getName() + "] 执行耗时 : " + executeTime + "ms");
         }
     }
 

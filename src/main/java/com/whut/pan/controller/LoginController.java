@@ -1,18 +1,32 @@
 package com.whut.pan.controller;
 
+import com.whut.pan.domain.FileSave;
+import com.whut.pan.domain.LinkSecret;
 import com.whut.pan.domain.ResponseMsg;
 import com.whut.pan.domain.User;
+import com.whut.pan.service.IFileService;
 import com.whut.pan.service.IUserService;
+import com.whut.pan.service.IVerifyCodeService;
+import com.whut.pan.service.impl.LinkSecretServiceImpl;
+import com.whut.pan.service.impl.SaveServiceImpl;
+import com.whut.pan.util.Md5SaltTool;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +34,8 @@ import java.util.Map;
 
 import static com.whut.pan.service.impl.FileServiceImpl.fileRootPath;
 import static com.whut.pan.util.FileUtil.deleteDir;
+import static com.whut.pan.util.StringUtil.base64Encoder;
+import static com.whut.pan.util.SystemUtil.isWindows;
 import static com.whut.pan.util.WebUtil.getSessionUserName;
 
 
@@ -31,10 +47,21 @@ import static com.whut.pan.util.WebUtil.getSessionUserName;
  */
 @Controller
 public class LoginController {
+    @Autowired
+    private IFileService fileService;
+
+    @Autowired
+    private SaveServiceImpl saveService;
+    @Autowired
+    private LinkSecretServiceImpl linkSecretService;
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private IVerifyCodeService iVerifyCodeService;
 
     private List<String> codeLsit = new ArrayList<String>() {{
         add("娄平");add("韩屏");add("张小梅");add("江雪梅");add("魏勤");add("方艺霖");
@@ -54,13 +81,24 @@ public class LoginController {
         Map<String, Object> map = new HashMap<>();
         String userName = request.getParameter("userName");
         String password = request.getParameter("password");
+        String encryptedPwd="";
+        try {
+            //加密的用户密码
+            encryptedPwd = Md5SaltTool.getEncryptedPwd(password);
+            System.out.println("encryptedPwd:"+encryptedPwd);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         User dataBaseUser = userService.queryUserByUsername(userName);
-        if (dataBaseUser != null && password.equals(dataBaseUser.getPassWord())) {
-            User user = new User(userName, password, dataBaseUser.getLevelType(), dataBaseUser.getEmail(), dataBaseUser.getPhone());
+        if (dataBaseUser != null && encryptedPwd.equals(dataBaseUser.getPassWord())) {
+            User user = new User(userName, encryptedPwd, dataBaseUser.getLevelType(), dataBaseUser.getEmail(), dataBaseUser.getPhone(),dataBaseUser.getAlias());
             request.getSession().setAttribute("user", user);
             logger.info("用户登录成功！");
             map.put("result", "1");
-        } else if (dataBaseUser != null && !password.equals(dataBaseUser.getPassWord())) {
+            map.put("userName",userName);
+        } else if (dataBaseUser != null && !encryptedPwd.equals(dataBaseUser.getPassWord())) {
             logger.info("密码错误！");
             map.put("result", "2");
         } else {
@@ -73,8 +111,11 @@ public class LoginController {
     // 退出登录
     @RequestMapping(value = "/quit", method = RequestMethod.GET)
     public String loginOut(HttpServletRequest request) {
-        // 删除用户文件
-        deleteDir(fileRootPath + getSessionUserName(request));
+        if (!isWindows()) {
+            // 非windows环境下要删除用户文件
+            deleteDir(fileRootPath + getSessionUserName(request));
+        }
+
         // 清除session
         request.getSession().invalidate();
         logger.info("退出登录成功！");
@@ -84,24 +125,26 @@ public class LoginController {
     // 注册
     @RequestMapping(value = "/signin", method = RequestMethod.POST)
     @ResponseBody
-    public Map<String, Object> signin(HttpServletRequest request, HttpServletResponse response) {
+    public Map<String, Object> signin(@RequestParam(required=false) String alias,@RequestParam(required=true) String userName,@RequestParam(required=true) String password,@RequestParam(required=false) String regcode,@RequestParam(required=false) String email ,@RequestParam(required=false) String phone, HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> map = new HashMap<>();
-        String userName = request.getParameter("userName");
-        String password = request.getParameter("password");
-        String email = request.getParameter("email");
-        String phone = request.getParameter("phone");
-        String regcode = request.getParameter("regcode");
-        User dataBaseUser = userService.queryUserByUsername(userName);
-
-        if(!regcode.contains("娄老师项目组@") && !nameManager1.equals(regcode) && !nameManager2.equals(regcode)) {
-            logger.info("注册失败，激活码不正确！");
+        String encryptedPwd="";
+        try {
+            //加密的用户密码
+           encryptedPwd = Md5SaltTool.getEncryptedPwd(password);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        User dataBaseUser = userService.queryUserByUsername(encryptedPwd);
+        //regcode的重新写入
+        if(!iVerifyCodeService.isValid(regcode)){
+            logger.info("注册失败，激活码失效或不正确！");
             map.put("result", "2");
             return map;
-        }
-
-        if(nameManager1.equals(regcode) || nameManager2.equals(regcode) || codeLsit.contains(regcode.split("@",-1)[1])){
+        }else{
             if (dataBaseUser == null) {
-                User user = new User(userName, password, "0", email, phone);
+                User user = new User(userName, encryptedPwd, "0", email, phone,alias);
                 userService.add(user);
 //            request.getSession().setAttribute("user", user);
                 logger.info("账号注册成功！");
@@ -110,12 +153,34 @@ public class LoginController {
                 logger.info("用户已经存在，请登录或换一个用户名！");
                 map.put("result", "0");
             }
+            return map;
         }
-        else {
-            logger.info("注册失败，激活码不正确！");
-            map.put("result", "2");
-        }
-        return map;
+
+
+
+//        if(!regcode.contains("娄老师项目组@") && !nameManager1.equals(regcode) && !nameManager2.equals(regcode)) {
+//            logger.info("注册失败，激活码不正确！");
+//            map.put("result", "2");
+//            return map;
+//        }
+
+//        if(nameManager1.equals(regcode) || nameManager2.equals(regcode) || codeLsit.contains(regcode.split("@",-1)[1])){
+//            if (dataBaseUser == null) {
+//                User user = new User(userName, encryptedPwd, "0", email, phone,alias);
+//                userService.add(user);
+////            request.getSession().setAttribute("user", user);
+//                logger.info("账号注册成功！");
+//                map.put("result", "1");
+//            } else {
+//                logger.info("用户已经存在，请登录或换一个用户名！");
+//                map.put("result", "0");
+//            }
+//        }
+//        else {
+//            logger.info("注册失败，激活码不正确！");
+//            map.put("result", "2");
+//        }
+//        return map;
     }
 
     @RequestMapping(value = "/username", produces = "application/json; charset=utf-8")
@@ -133,4 +198,83 @@ public class LoginController {
         return j;
     }
 
+    @RequestMapping(value = "/getUserByUserName")
+    @ResponseBody
+    public User getUserByUserName(HttpServletRequest request){
+        User user = (User) request.getSession().getAttribute("user");
+        return user;
+    }
+
+    //更新当前用户信息
+    @RequestMapping(value = "/updateUserByUserName")
+    @ResponseBody
+    public ResponseMsg updateUserByUserName(@RequestParam(required=false) String username,@RequestParam(required=false) String alias,@RequestParam(required=false) String password,@RequestParam(required=false) String email,@RequestParam(required=false) String phone,HttpServletRequest request){
+        ResponseMsg j = new ResponseMsg();
+        User user = (User) request.getSession().getAttribute("user");
+        if(username!=null){
+            user.setUserName(username);
+        }
+        if(alias!=null){
+            user.setAlias(alias);
+        }
+        if(password!=null){
+            try {
+                String encryptedPwd = Md5SaltTool.getEncryptedPwd(password);
+                user.setPassWord(encryptedPwd);
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+        }
+        if(email!=null){
+            user.setEmail(email);
+        }
+        if(phone!=null){
+            user.setPhone(phone);
+        }
+        userService.update(user);
+        j.setMsg("更新用户信息成功！");
+        j.setSuccess(true);
+        return j;
+    }
+
+    //检查是否是登录状态
+    @RequestMapping(value = "/islogin")
+    @ResponseBody
+    public ResponseMsg isLogin(@RequestParam(required = false) String savePath,HttpServletRequest request){
+        if(savePath==null){
+            savePath="/";
+        }
+        ResponseMsg j = new ResponseMsg();
+        // 获取用户名
+        User user = (User) request.getSession().getAttribute("user");
+
+        if (user == null) {
+            //未登录，跳转到登录界面，登录之后默认保存到网盘连接的地址<a href="wut://pan">链接到app</a>
+            j.setMsg("未登录");
+            j.setSuccess(false);
+        }else{
+            String userName = user.getUserName();
+//            //保存到网盘的操作
+//            System.out.println("11:"+link);
+//            FileSave fileSave=new FileSave();
+//            String localLink;
+//            LinkSecret linkSecret=linkSecretService.findLinkSecretBysecretLink(link);
+//            localLink=linkSecret.getLocalLink();
+//            System.out.println("获取成功："+localLink);
+//            fileSave.setLocalLink(localLink);
+//            fileSave.setUserName(userName);
+//            String[] msg = localLink.split("/");
+//            fileSave.setFileName(msg[msg.length-1]);
+//            if (saveService.findFileSaveByUserNameAndFileName(userName,msg[msg.length-1])==null) {
+//                saveService.save(fileSave);
+//            }
+
+            j.setMsg("已登录");
+            j.setSuccess(true);
+        }
+        return j;
+    }
 }

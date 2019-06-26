@@ -10,6 +10,7 @@ import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
 
 /**
  * @author Sandeepin
@@ -55,6 +56,12 @@ public class EncryptUtil {
         String encodePlus = base64Encoder.encode(pasByte);
         String encodePure = encodePlus.replace("+", "_");
         encodePure = encodePure.replace("/", "-");
+        if(SystemUtil.isWindows()){
+            encodePure = encodePure.replace("\r\n", "~");
+        }else{
+            encodePure = encodePure.replace("\n", "~");
+        }
+
         return encodePure;
     }
 
@@ -69,6 +76,12 @@ public class EncryptUtil {
     public String decode(String data) throws Exception {
         data = data.replace("_", "+");
         data = data.replace("-", "/");
+        if(SystemUtil.isWindows()){
+            data = data.replace("~", "\r\n");
+        }else{
+            data = data.replace("~", "\n");
+        }
+        data = data.replace("~", "\r\n");
         Cipher deCipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
         deCipher.init(Cipher.DECRYPT_MODE, key, iv);
         BASE64Decoder base64Decoder = new BASE64Decoder();
@@ -78,12 +91,54 @@ public class EncryptUtil {
 
     public static void main(String[] args) {
         try {
+            String test1 = "cdata/2017年2月26日~11月15日.7z";
             String test = "admin/2016.09.05CS_PSO.zip";
+            String test2 = "zc/zc.txt";
+            String test3 = "cdata/2017年2月-2018年7月/2017年2月26日~11月15日.7z";
+            String test4 = "cdata/2017年2月-2018年7月/2017年11月23日-12月7日.7z";
             String key = "whut5bfd5116cflower03adsandeepin";// 自定义密钥
             EncryptUtil des = new EncryptUtil(key, "utf-8");
-            System.out.println("加密前的字符：" + test);
-            System.out.println("加密后的字符：" + des.encode(test));
-            System.out.println("解密后的字符：" + des.decode(des.encode(test)));
+            System.out.println("加密前的字符：" + test3);
+            String str1=des.encode(test3);
+            System.out.println("加密后的字符：" +str1);
+            char[] str2=str1.toCharArray();
+//           int index=0;
+//            if(str1.contains("\n")){
+//                for(int i=0;i<str2.length;i++){
+//                   if(str2[i]==1108){
+//                       index=i;
+//                   }
+//                }
+//            }
+//            System.out.println("index:"+index);
+
+
+//            System.out.println(str2.length);
+//            for(int i=0;i<str2.length;i++){
+//                System.out.print(str2[i]);
+//                System.out.println(""+(int)(str2[i]));
+//        }
+
+//            String str2 = str1.replace("\n","");
+//            System.out.println("加密后的字符去掉换行：" +str2);
+//            System.out.println("加密后的字符1：" + des.encode(test3).replace("\n", ""));
+            System.out.println("解密后的字符：" + des.decode(des.encode(test3)));
+
+            System.out.println("加密前的字符：" + test4);
+            String str33= des.encode(test4);
+            System.out.println("加密后的字符：" + des.encode(test4));
+            char[] str3=str33.toCharArray();
+//            System.out.println(str3.length);
+//            for(int i=0;i<str3.length;i++){
+//                System.out.print(str3[i]);
+//                System.out.println(""+(int)(str3[i]));
+//            }
+
+            System.out.println("解密后的字符：" + des.decode(des.encode(test4)));
+            System.out.println("加密后的字符：BD-dCogX1b1iKZ93rXeRaKaCmfljKcd4eahWNiPxSsmZa37ZBQGS1Ctx5V5yqWtCC4qdrV3nYWps\nl3Kwn1k3XA==");
+           String testzc="BD-dCogX1b1iKZ93rXeRaKaCmfljKcd4eahWNiPxSsmZa37ZBQGS1Ctx5V5yqWtCC4qdrV3nYWps";
+           char[] testChar=testzc.toCharArray();
+            System.out.println(testzc.length());
         } catch (Exception e) {
             e.printStackTrace();
         }

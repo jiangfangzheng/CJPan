@@ -14,10 +14,15 @@ import java.util.Map;
  */
 @Service
 public class UserServiceImpl implements IUserService {
-
     @Autowired
     UserMapper userMapper;
 
+    @Override
+    public int alterPassword(String userName, String password) {
+        User user=this.userMapper.queryUserByUsername(userName);
+        user.setPassWord(password);
+        return this.userMapper.alterSecret(user);
+    }
     @Override
     public int add(User user) {
         return this.userMapper.add(user);

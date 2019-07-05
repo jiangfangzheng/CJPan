@@ -5,10 +5,15 @@ package com.whut.pan.domain;
  * 2018/2/11 0011
  */
 public class FileMsg {
+
     private String name;
+
     private String link;
+
     private String size;
+
     private String time;
+
     private String description;
 
     public String getSize() {

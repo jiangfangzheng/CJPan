@@ -1,18 +1,25 @@
 package com.whut.pan.domain;
 
-
 /**
  * 用户实体
  * 设置：用户名、密码、权限等级类型
+ *
  * @author Sandeepin
  */
 public class User {
-    private int   id;
+
+    private int id;
+
     private String userName;
+
     private String passWord;
+
     private String levelType;
+
     private String email;
+
     private String phone;
+
     private String alias;
 
     public User() {
@@ -21,16 +28,16 @@ public class User {
         this.levelType = "1";
         this.email = "";
         this.phone = "";
-        this.alias="";
+        this.alias = "";
     }
 
-    public User(String userName, String passWord, String levelType, String email, String phone,String alias) {
+    public User(String userName, String passWord, String levelType, String email, String phone, String alias) {
         this.userName = userName;
         this.passWord = passWord;
         this.levelType = levelType;
         this.email = email;
         this.phone = phone;
-        this.alias=alias;
+        this.alias = alias;
     }
 
     public User(String userName, String passWord) {

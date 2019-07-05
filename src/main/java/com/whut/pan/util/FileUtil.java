@@ -1,14 +1,46 @@
 package com.whut.pan.util;
 
+import com.whut.pan.Activate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author Sandeepin
  * 2018/2/11 0011
  */
-public class FileUtil {
+public final class FileUtil {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Activate.class);
+
+    private FileUtil() {
+    }
+
+    /**
+     * 字符串中将 // /// 等 统一为/
+     *
+     * @param input 字符串
+     * @return 解码结果
+     */
+    public static String stringSlashToOne(String input) {
+        String out = input.replace("////", "/");
+        out = out.replace("///", "/");
+        out = out.replace("//", "/");
+        return out;
+    }
+
+    public static String getNowDate() {
+        // 设置日期格式
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        return df.format(new Date());
+    }
+
     /**
      * 获得分片文件临时保存路径
+     *
      * @param tempPath
      * @param userName
      * @param fileName
@@ -17,7 +49,7 @@ public class FileUtil {
     public static String getTempDir(String tempPath, String userName, String fileName) {
         StringBuilder dir = new StringBuilder(tempPath);
         dir.append("/").append(userName);
-        dir.append("/").append(DateUtil.getNowDate());
+        dir.append("/").append(getNowDate());
         dir.append("/").append(fileName);
         return dir.toString();
     }
@@ -31,7 +63,7 @@ public class FileUtil {
     public static boolean delete(String fileName) {
         File file = new File(fileName);
         if (!file.exists()) {
-            System.out.println("删除文件失败:" + fileName + "不存在！");
+            LOGGER.error("删除文件失败, 文件不存在:{}", fileName);
             return false;
         } else {
             if (file.isFile()) {
@@ -53,14 +85,14 @@ public class FileUtil {
         // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
         if (file.exists() && file.isFile()) {
             if (file.delete()) {
-                System.out.println("删除单个文件" + fileName + "成功！");
+                LOGGER.warn("删除单个文件成功:{}", fileName);
                 return true;
             } else {
-                System.out.println("删除单个文件" + fileName + "失败！");
+                LOGGER.error("删除单个文件失败:{}", fileName);
                 return false;
             }
         } else {
-            System.out.println("删除单个文件失败：" + fileName + "不存在！");
+            LOGGER.error("删除单个文件失败, 文件不存在:{}", fileName);
             return false;
         }
     }
@@ -79,7 +111,7 @@ public class FileUtil {
         File dirFile = new File(dir);
         // 如果dir对应的文件不存在，或者不是一个目录，则退出
         if ((!dirFile.exists()) || (!dirFile.isDirectory())) {
-            System.out.println("删除目录失败：" + dir + "不存在！");
+            LOGGER.error("删除目录失败, 目录不存在:{}", dir);
             return false;
         }
         boolean flag = true;
@@ -103,126 +135,16 @@ public class FileUtil {
             }
         }
         if (!flag) {
-            System.out.println("删除目录失败！");
+            LOGGER.error("删除目录失败！");
             return false;
         }
         // 删除当前目录
         if (dirFile.delete()) {
-            System.out.println("删除目录" + dir + "成功！");
+            LOGGER.warn("删除目录成功:{}", dir);
             return true;
         } else {
             return false;
         }
-    }
-
-    /**
-     * 文件移动
-     *
-     * @param oldName 要移动的文件
-     * @param newName 新的路径
-     */
-    public static boolean renameFile(String oldName, String newName) {
-        // 路径
-        if (!oldName.equals(newName)) {
-            File oldfile = new File(oldName);
-            File newfile = new File(newName);
-            // 重命名文件不存在
-            if (!oldfile.exists()) {
-                return false;
-            }
-            // 若在该目录下已经有一个文件和新文件名相同，则不允许重命名
-            if (newfile.exists()) {
-                System.out.println(newName + "已经存在！");
-                return false;
-            } else {
-                return oldfile.renameTo(newfile);
-            }
-        } else {
-            System.out.println("移动路径没有变化相同...");
-            return false;
-        }
-    }
-
-    public static String fileSizeToString(long size) {
-        String sizeStr;
-        if (size >= 1073741824) {
-            sizeStr = size / 1073741824 + "GB";
-        } else if (size >= 1048576) {
-            sizeStr = size / 1048576 + "MB";
-        } else if (size >= 1024) {
-            sizeStr = size / 1024 + "KB";
-        } else if (size >= 1) {
-            sizeStr = size + "Byte";
-        } else {
-            sizeStr = "0";
-        }
-        return sizeStr;
-    }
-
-    /**
-     * 递归删除目录下的所有文件及子目录下所有文件
-     *
-     * @param dir 将要删除的文件目录
-     * @return boolean
-     */
-    public static boolean deleteDir(File dir) {
-        if (dir.exists() && dir.isDirectory()) {
-            String[] children = dir.list();
-            // 递归删除目录中的子目录下
-            for (int i = 0; i < children.length; i++) {
-                boolean success = deleteDir(new File(dir, children[i]));
-                if (!success) {
-                    return false;
-                }
-            }
-        }
-        // 目录此时为空，可以删除
-        boolean b = true;
-        if (dir.exists()){
-            b = dir.delete();
-        }
-        return b;
-    }
-
-
-    /**
-     * 递归删除目录下的所有文件及子目录下所有文件
-     *
-     * @param dirName 文件夹字符串
-     * @return boolean
-     */
-    public static boolean deleteDir(String dirName) {
-        File dir = new File(dirName);
-        return deleteDir(dir);
-    }
-
-
-    public static String getPathLastSplash(String path){
-        String fileName=path;
-        if(path.contains("/")){
-             fileName=path.substring(path.lastIndexOf("/")+1);
-        }else{
-            fileName=path.substring(path.lastIndexOf("\\")+1);
-        }
-        return fileName;
-
-    }
-
-    public static void main(String[] args) {
-        String fileName="D:\\home\\web\\upload\\upload\\files";
-
-        System.out.println( getPathLastSplash(fileName));
-//  // 删除单个文件
-//  String file = "c:/test/test.txt";
-//  DeleteFileUtil.deleteFile(file);
-//  System.out.println();
-        // 删除一个目录
-//        String dir = "D:/home/web/upload/upload/files";
-//        FileUtil.deleteDirectory(dir);
-//  System.out.println();
-//  // 删除文件
-//  dir = "c:/test/test0";
-//  DeleteFileUtil.delete(dir);
     }
 
 }

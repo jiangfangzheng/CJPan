@@ -6,6 +6,7 @@ package com.whut.pan.domain;
  * @author Sandeepin
  */
 public class ResponseMsg {
+
     private boolean success = false;
 
     private String msg = "";

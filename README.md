@@ -1,54 +1,62 @@
 # CJPan-Old
 武汉理工云盘 理工花盘
 
+## 2019年07月06日
+* 服务Website与处理后台分离，本服务只作为网页前端，服务更名为CJPanWebsite
+* 代码重构优化
+
 ## 2019年3月29日
- * 1. 解决下载安卓手机上的apk在文件名上出现乱码的情况，
- * 出现的问题：
- *      在火狐浏览器上，中文出现乱码，在谷歌浏览器上，（变成%28，）变成%29
- * 出现问题的接口：
- *      在controller中的ShareController文件的/downloadApk的接口
- * 出现问题原因及解决方法：
- *      response的编码方式是ISO-8859-1,所以文件名也要以同样的方式解码，解决中文乱码
- *      对于%28和%29采用替换的方式
- *2. 解决jpa创建表时默认的字符集的编码方式的问题，（测试中，不知道能否配置成功）
- * 出现的问题：
- *     为用户注册生成验证码时registerCode，中文的名字不能正确生成验证码
- * 出现问题的接口：
- *     registerCode
- * 出现问题的原因及解决办法
- *     jpa自动生成的表的默认编码方式为latin1，所以在config中配置了一个类MySQL5InnoDBDialectUtf8mb4
- *然后再配置文件中对这个类进行配置
- *spring.jpa.database-platform=com.whut.pan.config.MySQL5InnoDBDialectUtf8mb4
+
+* 1. 解决下载安卓手机上的apk在文件名上出现乱码的情况，
+
+> 出现的问题：
+> 在火狐浏览器上，中文出现乱码，在谷歌浏览器上，（变成%28，）变成%29
+> 出现问题的接口：
+> 在controller中的ShareController文件的/downloadApk的接口
+> 出现问题原因及解决方法：
+> response的编码方式是ISO-8859-1,所以文件名也要以同样的方式解码，解决中文乱码
+> 对于%28和%29采用替换的方式
+
+* 2. 解决jpa创建表时默认的字符集的编码方式的问题，（测试中，不知道能否配置成功）
+
+> 出现的问题：
+> 为用户注册生成验证码时registerCode，中文的名字不能正确生成验证码
+> 出现问题的接口：
+> registerCode
+> 出现问题的原因及解决办法
+> jpa自动生成的表的默认编码方式为latin1，所以在config中配置了一个类MySQL5InnoDBDialectUtf8mb4
+> 然后再配置文件中对这个类进行配置
+> spring.jpa.database-platform=com.whut.pan.config.MySQL5InnoDBDialectUtf8mb4
 
 ## 2019年3月7日
- * server.max-http-header-size=8192
- *在application.properties中添加了这一句，
- 试图解决：
- java.lang.IllegalArgumentException: Invalid character found in method name. 
- HTTP method names must be tokens
- 
+* server.max-http-header-size=8192
+
+> 在application.properties中添加了这一句，
+> 试图解决：
+> java.lang.IllegalArgumentException: Invalid character found in method name. 
+> HTTP method names must be tokens
+
 ## 2019年3月6日
- * 解决一段时间后，springboot部署到服务器后，运行一段时间后
- 处理文件上传的接口报异常
- * 在config目录下增加类MultipartConfig
+* 解决一段时间后，springboot部署到服务器后，运行一段时间后处理文件上传的接口报异常
+* 在config目录下增加类MultipartConfig
  
 ## 2019年2月18日
- *增加下载客户端apk的接口
- *接口名：downloadApk(在ShareController里面)
+* 增加下载客户端apk的接口
+* 接口名：downloadApk(在ShareController里面)
 
 ## 2018年12月4日
- *动态生成注册码：注册码为6位跟生成密码的代码一致
- *生成注册码只有wsj和zc和517909395@qq.com用户可以操作接口为/registerCode
- (只有登录了才可以使用)
+* 动态生成注册码：注册码为6位跟生成密码的代码一致
+* 生成注册码只有wsj和zc和517909395@qq.com用户可以操作接口为/registerCode(只有登录了才可以使用)
+
 
 ## 2018年11月26日
- *根据用户名删除用户 "/alterPassword"
- *更改用户的密码  "/deleteUser", 
+* 根据用户名删除用户 "/alterPassword"
+* 更改用户的密码  "/deleteUser", 
 
 ## 2018年11月13日
-*数据库密码加密
-*搜索前端做好
-*上传文件分块断点上传
+* 数据库密码加密
+* 搜索前端做好
+* 上传文件分块断点上传
 
 ## 2018年11月3日
 * 搜索只查询当前路径变为查询所有路径（后台）

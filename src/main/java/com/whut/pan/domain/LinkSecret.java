@@ -1,27 +1,28 @@
 package com.whut.pan.domain;
 
-import javax.persistence.*;
 import java.util.Date;
 
 /**
  * Created by zc on 2018/10/18.
  */
-@Entity
-@Table(name = "linkSecret")
 public class LinkSecret {
-    @Id
-    @GeneratedValue
+
     private int id;
-    //分享人
+
     private String fileName;
+
     private String userName;
+
     private String localLink;
+
     private Date expireDate;
+
     private String secret;
-    //下载次数
+
     private int downloadNum;
+
     private String secretLink;
-    // 分享时间
+
     private Date shareDate;
 
     public Date getShareDate() {

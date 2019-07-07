@@ -1,14 +1,12 @@
 # CJPanWebsite
-武汉理工云盘 理工花盘
+花云云盘
 
 ### 截图
 ![](./[screenshot]/1.jpg)
-![](./[screenshot]/1.jpg)
+![](./[screenshot]/2.jpg)
 
 ### 使用说明
-
 下载工程，编译打包，生成jar后运行：
-
 java -jar panWebsite.jar --server.port=8080
 
 ### 更新日志

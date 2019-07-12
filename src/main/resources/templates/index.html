@@ -7,9 +7,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="icon" href="/favicon.ico" type="image/ico">
-    <title>理工花云</title>
+    <title>花云云盘</title>
     <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
     <!--<link rel="stylesheet" href="/bootstrap/bootstrap-table/bootstrap-table.css">-->
+
+    <!--在线音乐播放功能-->
+    <link rel="stylesheet" href="/aplayer/APlayer.min.css">
+    <script src="/aplayer/APlayer.min.js"></script>
 
     <script src="/js/jquery.min.js"></script>
     <!--<script src="/js/jquery.zclip.js"></script>-->
@@ -68,7 +72,6 @@
                 margin-top: 7px !important;
             }
         }
-
     </style>
 
 <body>
@@ -89,18 +92,18 @@
 <div id="container" class="container"
      style="width: 90%;margin-top:20px;margin-bottom: 20px; background-color: rgba(255,255,255,0.7);border-radius: 10px;">
     <div class="header clearfix" style="margin: 0px; ">
-        <img src="/images/pan-top.png" style="max-height: 50px;">
+        <img src="/images/pan-top.png" style="max-height: 55px;">
         <span>
                 <ul class="nav nav-pills pull-right" style="margin-top: 10px;">
                     <li role="presentation"><a id="userLName" href="/" th:text="${author}"
                                                style="color: firebrick;background: unset;"></a></li>
                     <li id="homeBtn" role="presentation"><a href="/">主页</a></li>
-                    <!--<li id="contactBtn" role="presentation"><a data-toggle="modal" data-target="#donateDlg">捐助</a></li>-->
+                    <li id="contactBtn" role="presentation"><a data-toggle="modal" data-target="#donateDlg">捐助</a></li>
                     <li id="quitBtn" role="presentation"><a style="cursor: pointer">退出</a></li>
                 </ul>
             </span>
     </div>
-
+    <div id="player_music"></div>
     <div class="row" style="margin-top: 15px;">
         <div class="col-sm-12">
             <div class="btn-group" role="group" aria-label="...">
@@ -116,6 +119,12 @@
             <button class="btn btn-default" onclick="refreshUserFileList();"><i class="glyphicon glyphicon-refresh"></i>
                 刷新
             </button>
+            &nbsp;&nbsp;
+            <button class="btn btn-default" onclick="onekeymusic();"><i class="glyphicon glyphicon-music"></i>
+                一键音乐播放
+            </button>
+
+            <button id="copyIeplayLink" style="display: none" class="btn btn-primary"></button>
 
             <div class="input-group col-sm-3" >
                 <input type="text" id="find" autocomplete="off"
@@ -132,7 +141,7 @@
     <!-- /.row -->
 
     <ol id="breadcrumb" class="breadcrumb mybc">
-        <li><a href="/">根目录</a></li>
+        <li onclick="jumpToRootPath()"><a>根目录</a></li>
     </ol>
 
     <div id="table_file_bg" class="table-responsive" style="max-height: 500px;overflow: auto;">
@@ -153,6 +162,7 @@
         </table>
     </div>
 
+    <!-- Modal 文件上传-->
     <div class="modal fade" id="uploadModal" role="dialog">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -176,12 +186,13 @@
         </div>
     </div>
 
+    <!-- Modal 捐助我们-->
     <div class="modal fade" id="donateDlg" role="dialog">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <!--<h4 class="modal-title">捐助我们</h4>-->
+                    <h4 class="modal-title">捐助我们</h4>
                 </div>
                 <div class="modal-body" style="text-align: center;">
                     <img src="/images/cf_code.jpg" style="max-height: 350px;display: inline-block">
@@ -191,6 +202,23 @@
         </div>
     </div>
 
+    <!-- Modal 图片预览-->
+    <div class="modal fade" id="imgviewDlg" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">图片预览</h4>
+                </div>
+                <div class="modal-body" style="text-align: center;">
+                    <img id="imgview" src="/images/cf_code.jpg" style="max-height: 350px;display: inline-block">
+<!--                    <img src="/images/jfz_code.jpg" style="max-height: 350px;display: inline-block">-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 建立新文件夹-->
     <div class="modal fade" id="createDirDlg" role="dialog">
         <div class="modal-dialog modal-lg" style="width:60%;">
             <div class="modal-content">
@@ -209,6 +237,7 @@
         </div>
     </div>
 
+    <!-- Modal 分享功能-->
     <div class="modal fade" id="getcodeDlg" role="dialog">
         <div class="modal-dialog modal-lg" style="width:60%;">
             <div class="modal-content">
@@ -229,24 +258,23 @@
                     <h4>要分享的文件：
                         <span id="shareSelectedFile" style="font-family: '微软雅黑';font-size: 16px"></span>
                     </h4>
-                    <h4><span style="font-family: '微软雅黑';">请选择文件分享的有效期： </span>
-                        <!--<select id="selectExpireDay" style="font-size:16px;height: 25px"-->
-                                <!--onchange="changedate()">-->
-                        <!--</select>-->
+                    <h4>
+                        <span style="font-family: '微软雅黑';">请选择文件分享的有效期： </span>
                         &nbsp;&nbsp;
-                        <span id="selectExpireDay">
+                        <span id="selectExpireDay"></span>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="checkbox" style="display: inline-block;">
+                            <label>
+                                <input id="outer_share" type="checkbox"> 外网分享
+                            </label>
                         </span>
-                        <!--<select id="selectExpireDay" style="font-size:16px;height: 25px">-->
-                        <!--</select>-->
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <button id="createLink" class="btn btn-primary">创建链接</button>
-
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <button id="createLink" class="btn btn-primary">创建链接</button>
                     </h4>
-
 
                     <div id="sharetext" style="display:none;">
                         <h4 style="text-align: left;">下载地址：</h4>
-                        <span style="position: relative;"><a id="shareLink" target="_blank"></a></span>
+                        <span style="position: relative;"><a id="shareLink" style="word-wrap: break-word;" target="_blank"></a></span>
                         <h4 style="text-align: left;">提取码：</h4>
                         <span style="position: relative;"><a id="fetchSecret"></a></span>
                         <!--target="_blank"-->
@@ -322,6 +350,9 @@
                     document.getElementById("sharetext").style.display="block";
                     document.getElementById("shareLinkCopyCancel").style.display="block";
                     var rootLink = window.location.host;
+                    if($("#outer_share").is(":checked")){
+                        rootLink = "cjpan.jfz.me";
+                    }
                     var tgLink = "http://" + rootLink + "/sharefile?link=" + data.msg;
                     var tgReLink = tgLink.split("##");
                     $('#shareLink').text(tgReLink[0]);
@@ -331,7 +362,6 @@
             }
         });
     });
-
 
     $(function () {
         // 不支持ie浏览器
@@ -356,6 +386,9 @@
     var nowMovePath = "/";
     // 要移动的文件名
     var moveFile = {name: "", folder: false};
+
+    // 音乐播放对象
+    var apa = undefined;
 
     // 文件夹标识
     var folder_label = "文件夹";
@@ -543,7 +576,8 @@
         var rowobj_a_start = 0;
         var title_list = $("#breadcrumb");
         title_list.empty();
-        title_list.append('<li><a href="/">根目录</a></li>');
+        title_list.append('<li onclick="jumpToRootPath()"><a>根目录</a></li>');
+    // <a href="/" onclick="jumpToUpperPath('/')">
         // 获取文件夹层级
         var folderList = nowUserPath.split("/");
         var folderListLen = folderList.length;
@@ -563,7 +597,6 @@
                 else {
                     title_list.append('<li class="active" style="font-family: \'微软雅黑\';" onclick=" ;">' + folderList[i] + '</li>');
                 }
-
             }
         }
         $.ajax({
@@ -613,15 +646,8 @@
                     rowObj.insertCell(cell_start + 6).innerHTML = '<a>重命名</a>';
                     rowObj.insertCell(cell_start + 7).innerHTML = '<a>删除</a>';
                     downloadlist.push(data[i].link);
-                    if(username=="datashare"){
-                        rowObj.getElementsByTagName('a')[1].style.cssText="opacity: 0.5; color: #708090; text-decoration : none";
-                        rowObj.getElementsByTagName('a')[2].style.cssText="opacity: 0.5; color: #708090; text-decoration : none";
-                        rowObj.getElementsByTagName('a')[4].style.cssText="opacity: 0.5; color: #708090; text-decoration : none";
-                        rowObj.getElementsByTagName('a')[5].style.cssText="opacity: 0.5; color: #708090; text-decoration : none";
 
-                    }
                     // 文件夹操作响应事件
-
                     rowObj.getElementsByTagName('a')[0].onclick = function (event) {
                         var tempIdx = this.parentNode.parentNode.rowIndex;
                         // 如果已经处于重命名状态，就退出
@@ -648,21 +674,103 @@
                         else {
                             var fileType = tempName.split(".");
                             fileType = fileType[fileType.length - 1];
-                            fileType.toLowerCase();
-                            // if (fileType.indexOf("mp4") != -1 || fileType.indexOf("rmvb") != -1 || fileType.indexOf("wmv") != -1
-                            //     || fileType.indexOf("mkv") != -1 || fileType.indexOf("avi") != -1 || fileType.indexOf("flv") != -1)
-                            if (fileType.indexOf("mp4") != -1)
+                            fileType = fileType.toLowerCase();
+                            if (fileType.indexOf("mp4") != -1 || fileType.indexOf("flv") != -1)
                             {
-                                window.open("/onlineplayer?fileName=" + tempName + "&filePath=" + downloadlist[tempIdx - 1]);
-                            }else oTabNow.rows[tempIdx].getElementsByTagName('a')[3].onclick();
+                                window.open("/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + encodeURI(encodeURI(downloadlist[tempIdx - 1])));
+                            }
+                            else if (fileType.indexOf("mp3") != -1)
+                            {
+                                if (apa==undefined){
+                                    var ap1 = new APlayer({
+                                        container: document.getElementById('player_music'),
+                                        autoplay: true,
+                                        theme: '#FADFA3',
+                                        fixed:true,
+                                        audio: [{
+                                            name: tempName,
+                                            artist: username,
+                                            url: downloadlist[tempIdx - 1],
+                                            cover: '/images/aplayer.png'
+                                        }]
+                                    });
+                                    apa = ap1;
+                                }
+                                else{
+                                    // 获取当前播放列表所有文件名
+                                    var musiclist = new Array();
+                                    for (i in apa.list.audios){
+                                        musiclist.push(apa.list.audios[i].name);
+                                    }
+                                    // 要播放的音频在列表里，直接跳转，不在就添加列表
+                                    var musicidx = musiclist.indexOf(tempName);
+                                    if (musicidx !=-1){
+                                        apa.list.switch(musicidx);
+                                    }
+                                    else {
+                                        apa.list.add([{
+                                            name: tempName,
+                                            artist: username,
+                                            url: downloadlist[tempIdx - 1],
+                                            cover: '/images/aplayer.png'
+                                        }]);
+                                        apa.list.switch(apa.list.audios.length-1);
+                                    }
+                                }
+                            }
+                            else if (fileType.indexOf("rmvb") != -1 || fileType.indexOf("mkv") != -1 || fileType.indexOf("3gp") != -1 || fileType.indexOf("rm") != -1 || fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1)
+                            {
+                                // 可以用IE播放的特殊处理
+                                if(fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1){
+                                    if(window.confirm("avi和wmv格式的文件不能用chrome浏览器在线播放，只支持IE浏览器的在线播放，是否继续播放？")) {
+                                        // window.open("/onlineplayer?fileName=" + tempName + "&filePath=" + downloadlist[tempIdx - 1]);
+                                        $("#copyIeplayLink").text("http://" + window.location.host + "/onlineplayer?fileName=" + encodeURI(tempName) + "&filePath=" + encodeURI(downloadlist[tempIdx - 1]));
+                                        $("#copyIeplayLink").click();
+                                        return;
+                                    }
+                                }
+                                var transcodestatus = data[tempIdx - 1].transcode;
+                                if(transcodestatus=="transcoding") {
+                                    alert("该视频正在转码中，请勿重复操作！查看进度可通过刷新页面并再次点击该文件进行！");
+                                    return;
+                                }
+                                else if (transcodestatus=="failed") {
+                                    alert("该视频曾转码失败，请使用本地转码工具进行转码！");
+                                    return;
+                                }
+                                else if (transcodestatus=="complete") {
+                                    alert("该视频已完成转码，在线播放请刷新页面后点mp4文件，下载请点击下载按钮！");
+                                    return;
+                                }
+                                else if (transcodestatus=="transcodable") {
+                                    if(window.confirm("该视频可转码为mp4后在线播放，是否需要转码？")) {
+                                        $.ajax({
+                                            type: "POST",
+                                            url: "/videoconvert",
+                                            data: {filepath: downloadlist[tempIdx - 1]},
+                                            dataType: "json",
+                                            success: function (data)
+                                            {
+                                                if (data.success) {
+                                                    // alert("转码已完成，地址：" + data.msg);
+                                                    refreshUserFileList();
+                                                }
+                                            }
+                                        });
+                                        alert("视频正在转码中，查看进度可通过刷新页面并再次点击该文件进行！");
+                                    }
+                                }
+                            }
+                            else if(fileType.indexOf("jpg") != -1 || fileType.indexOf("gif") != -1 || fileType.indexOf("png") != -1 || fileType.indexOf("jpeg") != -1 || fileType.indexOf("bmp") != -1)
+                            {
+                                document.getElementById("imgview").src=downloadlist[tempIdx - 1];
+                                $('#imgviewDlg').modal('show');
+                            }
+                            else oTabNow.rows[tempIdx].getElementsByTagName('a')[3].onclick();
                         }
                     }
                     // 分享操作响应事件
                     rowObj.getElementsByTagName('a')[1].onclick = function () {
-                        if(username=="datashare"){
-//                            alert("不支持分享功能！");
-                            return false;
-                        }else{
                             var tempIdx = this.parentNode.parentNode.rowIndex;
                             // 如果已经处于重命名状态，就退出
                             var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
@@ -672,7 +780,6 @@
                             tempName = tempName.replace("<a>", "");
                             tempName = tempName.replace("</a>", "");
                             tem = tempName;
-                            // alert(tem);
                             // 判断是否为目录
                             var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
                             // 是目录的时候
@@ -681,60 +788,48 @@
                                 return;
                             }
                             //提交几天过期
-
                             $('#getcodeDlg').modal('show');
                             $("#shareLink").empty();
                             $("#fetchSecret").empty();
                             $('#shareSelectedFile').text(tempName);
-
-//                            $("#selectExpireDay").empty();
-//                            $('#selectExpireDay').append("<option value='永久有效'>永久有效</option>");
-//                            $('#selectExpireDay').append("<option value='7'>7天过期</option>");
-//                            $('#selectExpireDay').append("<option value='1'>1天过期</option>");
-
                             $("#selectExpireDay").empty();
                             $('#selectExpireDay').append(" <input type='radio' name='rationExpireDay' value='永久有效' checked='checked'/>永久有效&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
                             $('#selectExpireDay').append("<input type='radio' name='rationExpireDay'  value='7' />7天&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
                             $('#selectExpireDay').append("<input type='radio' name='rationExpireDay' value='1' />1天");
-
-//                            changedate();
-                        }
                     }
-
-
                     // 移动操作响应事件
                     rowObj.getElementsByTagName('a')[2].onclick = function () {
-                        if(username=="datashare"){
-//                               alert("不能进行移动操作！");
-                               return false;
-                        }else{
-                            var tempIdx = this.parentNode.parentNode.rowIndex;
-                            // 如果已经处于重命名状态，就退出
-                            var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
-                            if (tempName.indexOf("div") != -1) return;
+                        var tempIdx = this.parentNode.parentNode.rowIndex;
+                        // 如果已经处于重命名状态，就退出
+                        var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
+                        if (tempName.indexOf("div") != -1) return;
 
-                            // 去掉html元素
-                            tempName = tempName.replace("<a>", "");
-                            tempName = tempName.replace("</a>", "");
-
-                            $("#moveDlg").modal('show');
-
-                            // 判断是否为目录
-                            var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
-                            // 是目录的时候
-                            if (tempSize.indexOf(folder_label) != -1) {
-                                $("#moveSelectedFile").text("要移动的文件夹：" + tempName);
-                                moveFile.folder = true;
-                            }
-                            else {
-                                $("#moveSelectedFile").text("要移动的文件夹：" + tempName);
-                                moveFile.folder = false;
-                            }
-                            moveFile.name = tempName;
-
-                            nowMovePath = rootUserPath;
-                            listUserFolder(rootUserPath);
+                        var transcodestatus = data[tempIdx - 1].transcode;
+                        if(transcodestatus=="transcoding") {
+                            alert("该视频正在转码中，请勿移动！");
+                            return;
                         }
+
+                        // 去掉html元素
+                        tempName = tempName.replace("<a>", "");
+                        tempName = tempName.replace("</a>", "");
+
+                        $("#moveDlg").modal('show');
+
+                        // 判断是否为目录
+                        var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
+                        // 是目录的时候
+                        if (tempSize.indexOf(folder_label) != -1) {
+                            $("#moveSelectedFile").text("要移动的文件夹：" + tempName);
+                            moveFile.folder = true;
+                        }
+                        else {
+                            $("#moveSelectedFile").text("要移动的文件夹：" + tempName);
+                            moveFile.folder = false;
+                        }
+                        moveFile.name = tempName;
+                        nowMovePath = rootUserPath;
+                        listUserFolder(rootUserPath);
                     }
                     // 下载操作响应事件
                     rowObj.getElementsByTagName('a')[3].onclick = function () {
@@ -754,13 +849,11 @@
                             alert("文件夹不支持下载哦！");
                             return;
                         }
-
                         // 不支持ie下载
                         if (isIE() == true) {
                             alert("不支持ie内核的浏览器下载，请使用Chrome内核的浏览器下载！");
                             return;
                         }
-
                         // hdfs模式使用请求下载
                         // 普通模式直接下载
                         if (hdfsMode) {
@@ -779,125 +872,130 @@
                             });
                         }
                         else {
-                            window.downloadFile(downloadlist[tempIdx - 1]);
+                            // window.downloadFile(downloadlist[tempIdx - 1]);
+                            allDownloadFile(downloadlist[tempIdx - 1], tempName);
                         }
                     }
                     // 重命名操作响应事件
                     rowObj.getElementsByTagName('a')[4].onclick = function () {
-                        if(username=="datashare"){
-//                            alert("不能进行重命名操作！");
-                            return false;
-                        }else{
-                            var tempIdx = this.parentNode.parentNode.rowIndex;
-                            var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
-                            var rowRename = oTabNow.rows[tempIdx].cells[cell_start];
-                            // 如果已经处于重命名状态，就退出重命名
-                            if (tempName.indexOf("div") != -1) return;
-                            // 去掉html元素
-                            tempName = tempName.replace("<a>", "");
-                            tempName = tempName.replace("</a>", "");
-                            // 进入重命名模式
-                            rowRename.innerHTML =
-                                '<div class="input-group">' +
-                                '<input  id="' + tempName + 'Id' + '" style="width: 120px; height: 29px" type="text" class = "form-control" data-options="required:true " value="' + tempName + '">&nbsp;&nbsp;' +
-                                '<button id="' + tempName + 'BtnOK' + '" class = "glyphicon glyphicon-ok" style="height: 29px"></button>&nbsp;&nbsp;' +
-                                '<button id="' + tempName + 'BtnRemove' + '" class = "glyphicon glyphicon-remove" style="height: 29px"></button>' +
-                                '</div>'
-                            // 确认重命名
-                            rowRename.getElementsByTagName('button')[0].onclick = function () {
-                                // rowRename.innerHTML = this.parentNode.childNodes[0].value;
-                                var oldName = this.parentNode.childNodes[0].defaultValue;
-                                var newName = this.parentNode.childNodes[0].value;
-                                if (newName == "") {
-                                    rowRename.getElementsByTagName('button')[1].onclick();
-                                    return;
-                                }
-                                // 判断是否为目录
-                                var tempSize = oTabNow.rows[tempIdx].cells[2].innerHTML;
-                                // 是目录的时候
-                                if (tempSize.indexOf(folder_label) != -1) {
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/filerename",
-                                        data: {oldName: "@dir@", newName: newName, path: nowUserPath + oldName},
-                                        dataType: "json",
-                                        success: function (data) {
-                                            refreshUserFileList();
-                                        }
-                                    });
-                                }
-                                else {
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/filerename",
-                                        data: {oldName: oldName, newName: newName, path: nowUserPath},
-                                        dataType: "json",
-                                        success: function (data) {
-                                            refreshUserFileList();
-                                            alert(data.msg);
-                                        }
-                                    });
-                                }
+                        var tempIdx = this.parentNode.parentNode.rowIndex;
+                        var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
+                        var rowRename = oTabNow.rows[tempIdx].cells[cell_start];
+                        // 如果已经处于重命名状态，就退出重命名
+                        if (tempName.indexOf("div") != -1) return;
+
+                        var transcodestatus = data[tempIdx - 1].transcode;
+                        if(transcodestatus=="transcoding") {
+                            alert("该视频正在转码中，请勿重命名！");
+                            return;
+                        }
+
+                        // 去掉html元素
+                        tempName = tempName.replace("<a>", "");
+                        tempName = tempName.replace("</a>", "");
+                        // 进入重命名模式
+                        rowRename.innerHTML =
+                            '<div class="input-group">' +
+                            '<input  id="' + tempName + 'Id' + '" style="width: 120px; height: 29px" type="text" class = "form-control" data-options="required:true " value="' + tempName + '">&nbsp;&nbsp;' +
+                            '<button id="' + tempName + 'BtnOK' + '" class = "glyphicon glyphicon-ok" style="height: 29px"></button>&nbsp;&nbsp;' +
+                            '<button id="' + tempName + 'BtnRemove' + '" class = "glyphicon glyphicon-remove" style="height: 29px"></button>' +
+                            '</div>'
+                        // 确认重命名
+                        rowRename.getElementsByTagName('button')[0].onclick = function () {
+                            // rowRename.innerHTML = this.parentNode.childNodes[0].value;
+                            var oldName = this.parentNode.childNodes[0].defaultValue;
+                            var newName = this.parentNode.childNodes[0].value;
+                            if (newName == "") {
+                                rowRename.getElementsByTagName('button')[1].onclick();
+                                return;
                             }
-                            // 取消重命名
-                            rowRename.getElementsByTagName('button')[1].onclick = function () {
-                                rowRename.innerHTML = "<a>" + this.parentNode.childNodes[0].defaultValue + "</a>";
+                            // 判断是否为目录
+                            var tempSize = oTabNow.rows[tempIdx].cells[2].innerHTML;
+                            // 是目录的时候
+                            if (tempSize.indexOf(folder_label) != -1) {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/filerename",
+                                    data: {oldName: "@dir@", newName: newName, path: nowUserPath + oldName},
+                                    dataType: "json",
+                                    success: function (data) {
+                                        refreshUserFileList();
+                                    }
+                                });
+                            }
+                            else {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/filerename",
+                                    data: {oldName: oldName, newName: newName, path: nowUserPath},
+                                    dataType: "json",
+                                    success: function (data) {
+                                        refreshUserFileList();
+                                        alert(data.msg);
+                                    }
+                                });
                             }
                         }
+                        // 取消重命名
+                        rowRename.getElementsByTagName('button')[1].onclick = function () {
+                                rowRename.innerHTML = "<a>" + this.parentNode.childNodes[0].defaultValue + "</a>";
+                            }
                     }
                     // 删除操作响应事件
                     rowObj.getElementsByTagName('a')[5].onclick = function () {
-                        if (username=="datashare"){
-//                           alert("不能进行删除操作！");
-                           return false;
-                        }else{
-                            if(window.confirm("确定删除吗？")){
-                                // alert("确定");
+                        var tempIdx = this.parentNode.parentNode.rowIndex;
+                        // 如果已经处于重命名状态，就退出
+                        var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
+                        if (tempName.indexOf("div") != -1) return;
 
-                                var tempIdx = this.parentNode.parentNode.rowIndex;
-                                // 如果已经处于重命名状态，就退出
-                                var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
-                                if (tempName.indexOf("div") != -1) return;
+                        var transcodestatus = data[tempIdx - 1].transcode;
+                        if(transcodestatus=="transcoding") {
+                            alert("该视频正在转码中，请勿删除！");
+                            return;
+                        }
 
-                                // 去掉html元素
-                                tempName = tempName.replace("<a>", "");
-                                tempName = tempName.replace("</a>", "");
+                        if(window.confirm("确定删除吗？")){
+                            // 去掉html元素
+                            tempName = tempName.replace("<a>", "");
+                            tempName = tempName.replace("</a>", "");
 
-                                // 判断是否为目录
-                                var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
-                                if (tempSize.indexOf(folder_label) != -1) {
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/filedelete",
-                                        data: {fileName: "@dir@", path: nowUserPath + tempName},
-                                        dataType: "json",
-                                        success: function (data) {
-                                            refreshUserFileList();
-                                        }
-                                    });
-                                }
-                                else {
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/filedelete",
-                                        data: {fileName: tempName, path: nowUserPath},
-                                        dataType: "json",
-                                        success: function (data) {
-                                            refreshUserFileList();
-                                        }
-                                    });
-                                }
-                                return true;
-                            } else {
-                                // alert("取消");
-                                return false;
+                            // 判断是否为目录
+                            var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
+                            if (tempSize.indexOf(folder_label) != -1) {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/filedelete",
+                                    data: {fileName: "@dir@", path: nowUserPath + tempName},
+                                    dataType: "json",
+                                    success: function (data) {
+                                        refreshUserFileList();
+                                    }
+                                });
                             }
-
+                            else {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/filedelete",
+                                    data: {fileName: tempName, path: nowUserPath},
+                                    dataType: "json",
+                                    success: function (data) {
+                                        refreshUserFileList();
+                                    }
+                                });
+                            }
+                            return true;
+                        } else {
+                            return false;
                         }
                     }
                 }
             }
         });
+    }
+
+    function jumpToRootPath() {
+        nowUserPath = "/";
+        refreshUserFileList();
     }
 
     function jumpToUpperPath(filePathName) {
@@ -968,16 +1066,27 @@
         }
     }
 
-    var clipboard = new ClipboardJS('#copyLinkBtn', {
+    // 剪贴板响应函数
+    var clipboard = new ClipboardJS('.btn-primary', {
         text: function(trigger) {
-            return "下载地址：" + document.getElementById("shareLink").innerText+ "\n提取码：" + document.getElementById("fetchSecret").innerText;
+            if (trigger.id=="copyLinkBtn")
+                return "下载地址：" + document.getElementById("shareLink").innerText+ "\n提取码：" + document.getElementById("fetchSecret").innerText;
+            else if (trigger.id=="copyIeplayLink")
+                return  $("#copyIeplayLink").text();
+            else
+                return;
         }
     });
+    // 剪切成功响应函数
     clipboard.on('success', function(e) {
-        alert("已复制到剪贴板！");
+        if (e.trigger.id=="copyIeplayLink"){
+            alert("已将播放链接复制到剪贴板，请打开IE浏览器查看！");
+        }
+        else
+            alert("已复制到剪贴板！");
         e.clearSelection();
     });
-
+    // 剪切失败响应函数
     clipboard.on('error', function(e) {
         alert("复制失败！");
     });
@@ -1036,7 +1145,6 @@
                             data[i].name + '</a>');
                     }
                 }
-
                 activeObj.find('a').each(function (index) {
                     $(this).on('click', function () {
                         nowMovePath += $(this).text() + "/";
@@ -1072,6 +1180,7 @@
         });
     });
 
+    // 搜索响应函数
     $("#find").keydown(function(event){
         if(event.which == "13"){
             findfile();
@@ -1084,6 +1193,7 @@
         }
     });
 
+    // 文件搜索核心函数
     function findfile() {
         var cell_start = 1;
         var rowobj_a_start = 0;
@@ -1125,7 +1235,7 @@
             success: function (data) {
                 // 将现在的表内容存储并清空
                 $("#breadcrumb").empty();
-                $("#breadcrumb").append("<li><a href=\"/\">返回上一级</a></li>")
+                $("#breadcrumb").append("<li onclick=\"jumpToRootPath()\"><a>返回上一级</a></li>")
                 $("#breadcrumb").append(" <li value=input>搜索：" + input + "</li>");
                 var oTabNow = document.getElementById('table_filelist');
                 var nowTabRowLen = oTabNow.rows.length;
@@ -1166,13 +1276,6 @@
                     rowObj.insertCell(cell_start + 6).innerHTML = '<a>重命名</a>';
                     rowObj.insertCell(cell_start + 7).innerHTML = '<a>删除</a>';
                     downloadlist.push(data[i].link);
-                    if(username=="datashare"){
-                        rowObj.getElementsByTagName('a')[1].style.cssText="opacity: 0.5; color: #708090; text-decoration : none";
-                        rowObj.getElementsByTagName('a')[2].style.cssText="opacity: 0.5; color: #708090; text-decoration : none";
-                        rowObj.getElementsByTagName('a')[4].style.cssText="opacity: 0.5; color: #708090; text-decoration : none";
-                        rowObj.getElementsByTagName('a')[5].style.cssText="opacity: 0.5; color: #708090; text-decoration : none";
-
-                    }
                     // 文件夹操作响应事件
                     rowObj.getElementsByTagName('a')[0].onclick = function () {
                         var tempIdx = this.parentNode.parentNode.rowIndex;
@@ -1194,13 +1297,97 @@
                         else {
                             var fileType = tempName.split(".");
                             fileType = fileType[fileType.length - 1];
-                            fileType.toLowerCase();
-                            // if (fileType.indexOf("mp4") != -1 || fileType.indexOf("rmvb") != -1 || fileType.indexOf("wmv") != -1
-                            //     || fileType.indexOf("mkv") != -1 || fileType.indexOf("avi") != -1 || fileType.indexOf("flv") != -1)
-                            if (fileType.indexOf("mp4") != -1)
+                            fileType = fileType.toLowerCase();
+                            if (fileType.indexOf("mp4") != -1 || fileType.indexOf("flv") != -1)
                             {
-                                window.open("/onlineplayer?fileName=" + tempName + "&filePath=" + downloadlist[tempIdx - 1]);
-                            }else oTabNow.rows[tempIdx].getElementsByTagName('a')[3].onclick();
+                                window.open("/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + encodeURI(encodeURI(downloadlist[tempIdx - 1])));
+                            }
+                            else if (fileType.indexOf("mp3") != -1)
+                            {
+                                if (apa==undefined){
+                                    var ap1 = new APlayer({
+                                        container: document.getElementById('player_music'),
+                                        autoplay: true,
+                                        theme: '#FADFA3',
+                                        fixed:true,
+                                        audio: [{
+                                            name: tempName,
+                                            artist: username,
+                                            url: downloadlist[tempIdx - 1],
+                                            cover: '/images/aplayer.png'
+                                        }]
+                                    });
+                                    apa = ap1;
+                                }
+                                else{
+                                    // 获取当前播放列表所有文件名
+                                    var musiclist = new Array();
+                                    for (i in apa.list.audios){
+                                        musiclist.push(apa.list.audios[i].name);
+                                    }
+                                    // 要播放的音频在列表里，直接跳转，不在就添加列表
+                                    var musicidx = musiclist.indexOf(tempName);
+                                    if (musicidx !=-1){
+                                        apa.list.switch(musicidx);
+                                    }
+                                    else {
+                                        apa.list.add([{
+                                            name: tempName,
+                                            artist: username,
+                                            url: downloadlist[tempIdx - 1],
+                                            cover: '/images/aplayer.png'
+                                        }]);
+                                        apa.list.switch(apa.list.audios.length-1);
+                                    }
+                                }
+                            }
+                            else if (fileType.indexOf("rmvb") != -1 || fileType.indexOf("wmv") != -1 || fileType.indexOf("mkv") != -1|| fileType.indexOf("avi") != -1|| fileType.indexOf("3gp") != -1 || fileType.indexOf("rm") != -1)
+                            {
+                                // 可以用IE播放的特殊处理
+                                if(fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1){
+                                    if(window.confirm("avi和wmv格式的文件不能用chrome浏览器在线播放，只支持IE浏览器的在线播放，是否继续播放？")) {
+                                        $("#copyIeplayLink").text("http://" + window.location.host + "/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + (encodeURI(downloadlist[tempIdx - 1])));
+                                        $("#copyIeplayLink").click();
+                                        return;
+                                    }
+                                }
+                                var transcodestatus = data[tempIdx - 1].transcode;
+                                if(transcodestatus=="transcoding") {
+                                    alert("该视频正在转码中，请勿重复操作！查看进度可通过刷新页面并再次点击该文件进行！");
+                                    return;
+                                }
+                                else if (transcodestatus=="failed") {
+                                    alert("该视频曾转码失败，请使用本地转码工具进行转码！");
+                                    return;
+                                }
+                                else if (transcodestatus=="complete") {
+                                    alert("该视频已完成转码，在线播放请刷新页面后点mp4文件，下载请点击下载按钮！");
+                                    return;
+                                }
+                                else if (transcodestatus=="transcodable") {
+                                    if(window.confirm("该视频可转码为mp4后在线播放，是否需要转码？")) {
+                                        $.ajax({
+                                            type: "POST",
+                                            url: "/videoconvert",
+                                            data: {filepath: downloadlist[tempIdx - 1]},
+                                            dataType: "json",
+                                            success: function (data)
+                                            {
+                                                if (data.success) {
+                                                    // alert("转码已完成，地址：" + data.msg);
+                                                    refreshUserFileList();
+                                                }
+                                            }
+                                        });
+                                        alert("视频正在转码中，查看进度可通过刷新页面并再次点击该文件进行！");
+                                    }
+                                }
+                            }
+                            else if(fileType.indexOf("jpg") != -1 || fileType.indexOf("gif") != -1 || fileType.indexOf("png") != -1 || fileType.indexOf("jpeg") != -1 || fileType.indexOf("bmp") != -1){
+                                document.getElementById("imgview").src=downloadlist[tempIdx - 1];
+                                $('#imgviewDlg').modal('show');
+                            }
+                            else oTabNow.rows[tempIdx].getElementsByTagName('a')[3].onclick();
                         }
                     }
                     // 分享操作响应事件
@@ -1217,86 +1404,74 @@
                             }
                         }
                         nowUserPath=text;
-                        if(username=="datashare"){
-//                            alert("不支持分享功能！");
-                            return false;
+                        var tempIdx = this.parentNode.parentNode.rowIndex;
+                        // 如果已经处于重命名状态，就退出
+                        var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
+                        if (tempName.indexOf("div") != -1) return;
 
-                        }else{
-                            var tempIdx = this.parentNode.parentNode.rowIndex;
-                            // 如果已经处于重命名状态，就退出
-                            var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
-                            if (tempName.indexOf("div") != -1) return;
-
-                            // 去掉html元素
-                            tempName = tempName.replace("<a>", "");
-                            tempName = tempName.replace("</a>", "");
-                            tem = tempName;
-                            // alert(tem);
-                            // 判断是否为目录
-                            var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
-                            // 是目录的时候
-                            if (tempSize.indexOf(folder_label) != -1) {
-                                alert("文件夹不支持分享哦！");
-                                return;
-                            }
-                            //提交几天过期
-
-                            $('#getcodeDlg').modal('show');
-                            $("#shareLink").empty();
-                            $("#fetchSecret").empty();
-                            $('#shareSelectedFile').text(tempName);
-
-//                            $("#selectExpireDay").empty();
-//                            $('#selectExpireDay').append("<option value='永久有效'>永久有效</option>");
-//                            $('#selectExpireDay').append("<option value='7'>7天过期</option>");
-//                            $('#selectExpireDay').append("<option value='1'>1天过期</option>");
-
-                            $("#selectExpireDay").empty();
-                            $('#selectExpireDay').append(" <input type='radio' name='rationExpireDay' value='永久有效' checked='checked'/>永久有效&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
-                            $('#selectExpireDay').append("<input type='radio' name='rationExpireDay'  value='7' />7天&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
-                            $('#selectExpireDay').append("<input type='radio' name='rationExpireDay' value='1' />1天");
-
-//                            changedate();
-
+                        // 去掉html元素
+                        tempName = tempName.replace("<a>", "");
+                        tempName = tempName.replace("</a>", "");
+                        tem = tempName;
+                        // alert(tem);
+                        // 判断是否为目录
+                        var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
+                        // 是目录的时候
+                        if (tempSize.indexOf(folder_label) != -1) {
+                            alert("文件夹不支持分享哦！");
+                            return;
                         }
-
-
+                        //提交几天过期
+                        $('#getcodeDlg').modal('show');
+                        $("#shareLink").empty();
+                        $("#fetchSecret").empty();
+                        $('#shareSelectedFile').text(tempName);
+                        $("#selectExpireDay").empty();
+                        $('#selectExpireDay').append(" <input type='radio' name='rationExpireDay' value='永久有效' checked='checked'/>永久有效&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+                        $('#selectExpireDay').append("<input type='radio' name='rationExpireDay'  value='7' />7天&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+                        $('#selectExpireDay').append("<input type='radio' name='rationExpireDay' value='1' />1天");
                     }
-
-
                     // 移动操作响应事件
                     rowObj.getElementsByTagName('a')[2].onclick = function () {
-                        if(username=="datashare"){
-//                            alert("不能进行移动操作！");
-                            return false;
-                        }else{
-                            var tempIdx = this.parentNode.parentNode.rowIndex;
-                            // 如果已经处于重命名状态，就退出
-                            var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
-                            if (tempName.indexOf("div") != -1) return;
+                        var tempIdx = this.parentNode.parentNode.rowIndex;
+                        // 如果已经处于重命名状态，就退出
+                        var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
+                        if (tempName.indexOf("div") != -1) return;
 
-                            // 去掉html元素
-                            tempName = tempName.replace("<a>", "");
-                            tempName = tempName.replace("</a>", "");
-
-                            $("#moveDlg").modal('show');
-
-                            // 判断是否为目录
-                            var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
-                            // 是目录的时候
-                            if (tempSize.indexOf(folder_label) != -1) {
-                                $("#moveSelectedFile").text("要移动的文件夹：" + tempName);
-                                moveFile.folder = true;
-                            }
-                            else {
-                                $("#moveSelectedFile").text("要移动的文件夹：" + tempName);
-                                moveFile.folder = false;
-                            }
-                            moveFile.name = tempName;
-
-                            nowMovePath = rootUserPath;
-                            listUserFolder(rootUserPath);
+                        var transcodestatus = data[tempIdx - 1].transcode;
+                        if(transcodestatus=="transcoding") {
+                            alert("该视频正在转码中，请勿移动！");
+                            return;
                         }
+
+                        // 去掉html元素
+                        tempName = tempName.replace("<a>", "");
+                        tempName = tempName.replace("</a>", "");
+
+                        $("#moveDlg").modal('show');
+
+                        // 判断是否为目录
+                        var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
+                        // 是目录的时候
+                        if (tempSize.indexOf(folder_label) != -1) {
+                            $("#moveSelectedFile").text("要移动的文件夹：" + tempName);
+                            moveFile.folder = true;
+                        }
+                        else {
+                            $("#moveSelectedFile").text("要移动的文件夹：" + tempName);
+                            moveFile.folder = false;
+                        }
+                        moveFile.name = tempName;
+
+                        // 文件真实路径
+                        var tmprealpath = data[tempIdx - 1].link;
+                        tmprealpath = tmprealpath.substring(0, tmprealpath.lastIndexOf("/")+1);
+                        tmprealpath = tmprealpath.replace("/data/", "");
+                        tmprealpath = tmprealpath.substring(tmprealpath.indexOf("/"));
+                        nowUserPath = tmprealpath;
+
+                        nowMovePath = rootUserPath;
+                        listUserFolder(rootUserPath);
                     }
                     // 下载操作响应事件
                     rowObj.getElementsByTagName('a')[3].onclick = function () {
@@ -1316,7 +1491,6 @@
                             alert("文件夹不支持下载哦！");
                             return;
                         }
-
                         // 不支持ie下载
                         if (isIE() == true) {
                             alert("不支持ie内核的浏览器下载，请使用Chrome内核的浏览器下载！");
@@ -1352,7 +1526,8 @@
                             });
                         }
                         else {
-                            window.downloadFile(downloadlist[tempIdx - 1]);
+                            // window.downloadFile(downloadlist[tempIdx - 1]);
+                            allDownloadFile(downloadlist[tempIdx - 1], tempName);
                         }
                     }
                     // 重命名操作响应事件
@@ -1369,69 +1544,68 @@
                             }
                         }
                         nowUserPath=text;
-                        //alert(nowUserPath);
-                        if(username=="datashare"){
-//                            alert("不能进行重命名操作！");
-                            return false;
-                        }else{
-                            var tempIdx = this.parentNode.parentNode.rowIndex;
-                            var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
-                            var rowRename = oTabNow.rows[tempIdx].cells[cell_start];
-                            // 如果已经处于重命名状态，就退出重命名
-                            if (tempName.indexOf("div") != -1) return;
-                            // 去掉html元素
-                            tempName = tempName.replace("<a>", "");
-                            tempName = tempName.replace("</a>", "");
-                            // 进入重命名模式
-                            rowRename.innerHTML =
-                                '<div class="input-group">' +
-                                '<input  id="' + tempName + 'Id' + '" style="width: 120px; height: 29px" type="text" class = "form-control" data-options="required:true " value="' + tempName + '">&nbsp;&nbsp;' +
-                                '<button id="' + tempName + 'BtnOK' + '" class = "glyphicon glyphicon-ok" style="height: 29px"></button>&nbsp;&nbsp;' +
-                                '<button id="' + tempName + 'BtnRemove' + '" class = "glyphicon glyphicon-remove" style="height: 29px"></button>' +
-                                '</div>'
-                            // 确认重命名
-                            rowRename.getElementsByTagName('button')[0].onclick = function () {
-                                // rowRename.innerHTML = this.parentNode.childNodes[0].value;
-                                var oldName = this.parentNode.childNodes[0].defaultValue;
-                                var newName = this.parentNode.childNodes[0].value;
-                                if (newName == "") {
-                                    rowRename.getElementsByTagName('button')[1].onclick();
-                                    return;
-                                }
-                                // 判断是否为目录
-                                var tempSize = oTabNow.rows[tempIdx].cells[2].innerHTML;
-                                // 是目录的时候
-                                if (tempSize.indexOf(folder_label) != -1) {
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/filerename",
-                                        data: {oldName: "@dir@", newName: newName, path: nowUserPath + oldName},
-                                        dataType: "json",
-                                        success: function (data) {
-                                            refreshUserFileList();
-                                        }
-                                    });
-                                }
-                                else {
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/filerename",
-                                        data: {oldName: oldName, newName: newName, path: nowUserPath},
-                                        dataType: "json",
-                                        success: function (data) {
-                                            refreshUserFileList();
-                                            alert(data.msg);
-                                        }
-                                    });
-                                }
-                            }
-                            // 取消重命名
-                            rowRename.getElementsByTagName('button')[1].onclick = function () {
-                                rowRename.innerHTML = "<a>" + this.parentNode.childNodes[0].defaultValue + "</a>";
-                            }
+                        var tempIdx = this.parentNode.parentNode.rowIndex;
+                        var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
+                        var rowRename = oTabNow.rows[tempIdx].cells[cell_start];
+                        // 如果已经处于重命名状态，就退出重命名
+                        if (tempName.indexOf("div") != -1) return;
 
+                        var transcodestatus = data[tempIdx - 1].transcode;
+                        if(transcodestatus=="transcoding") {
+                            alert("该视频正在转码中，请勿重命名！");
+                            return;
                         }
 
+                        // 去掉html元素
+                        tempName = tempName.replace("<a>", "");
+                        tempName = tempName.replace("</a>", "");
+                        // 进入重命名模式
+                        rowRename.innerHTML =
+                            '<div class="input-group">' +
+                            '<input  id="' + tempName + 'Id' + '" style="width: 120px; height: 29px" type="text" class = "form-control" data-options="required:true " value="' + tempName + '">&nbsp;&nbsp;' +
+                            '<button id="' + tempName + 'BtnOK' + '" class = "glyphicon glyphicon-ok" style="height: 29px"></button>&nbsp;&nbsp;' +
+                            '<button id="' + tempName + 'BtnRemove' + '" class = "glyphicon glyphicon-remove" style="height: 29px"></button>' +
+                            '</div>'
+                        // 确认重命名
+                        rowRename.getElementsByTagName('button')[0].onclick = function () {
+                            // rowRename.innerHTML = this.parentNode.childNodes[0].value;
+                            var oldName = this.parentNode.childNodes[0].defaultValue;
+                            var newName = this.parentNode.childNodes[0].value;
+                            if (newName == "") {
+                                rowRename.getElementsByTagName('button')[1].onclick();
+                                return;
+                            }
+                            // 判断是否为目录
+                            var tempSize = oTabNow.rows[tempIdx].cells[2].innerHTML;
+                            // 是目录的时候
+                            if (tempSize.indexOf(folder_label) != -1) {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/filerename",
+                                    data: {oldName: "@dir@", newName: newName, path: nowUserPath + oldName},
+                                    dataType: "json",
+                                    success: function (data) {
+                                        refreshUserFileList();
+                                    }
+                                });
+                            }
+                            else {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/filerename",
+                                    data: {oldName: oldName, newName: newName, path: nowUserPath},
+                                    dataType: "json",
+                                    success: function (data) {
+                                        refreshUserFileList();
+                                        alert(data.msg);
+                                    }
+                                });
+                            }
+                        }
+                        // 取消重命名
+                        rowRename.getElementsByTagName('button')[1].onclick = function () {
+                                rowRename.innerHTML = "<a>" + this.parentNode.childNodes[0].defaultValue + "</a>";
+                            }
                     }
                     // 删除操作响应事件
                     rowObj.getElementsByTagName('a')[5].onclick = function () {
@@ -1447,57 +1621,104 @@
                             }
                         }
                         nowUserPath=text;
-                        if(username=="datashare"){
-//                            alert("不能进行删除操作！");
-                            return false;
 
-                        }else{
-                            if(window.confirm('确定删除吗？')){
-                                // alert("确定");
-                                var tempIdx = this.parentNode.parentNode.rowIndex;
-                                // 如果已经处于重命名状态，就退出
-                                var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
-                                if (tempName.indexOf("div") != -1) return;
-                                // 去掉html元素
-                                tempName = tempName.replace("<a>", "");
-                                tempName = tempName.replace("</a>", "");
+                        var tempIdx = this.parentNode.parentNode.rowIndex;
+                        // 如果已经处于重命名状态，就退出
+                        var tempName = oTabNow.rows[tempIdx].cells[cell_start].innerHTML;
+                        if (tempName.indexOf("div") != -1) return;
 
-                                // 判断是否为目录
-                                var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
-                                if (tempSize.indexOf(folder_label) != -1) {
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/filedelete",
-                                        data: {fileName: "@dir@", path: nowUserPath + tempName},
-                                        dataType: "json",
-                                        success: function (data) {
-                                            refreshUserFileList();
-                                        }
-                                    });
-                                }
-                                else {
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/filedelete",
-                                        data: {fileName: tempName, path: nowUserPath},
-                                        dataType: "json",
-                                        success: function (data) {
-                                            refreshUserFileList();
-                                        }
-                                    });
-                                }
-                                return true;
-                            }else{
-                                // alert("取消");
-                                return false;
+                        var transcodestatus = data[tempIdx - 1].transcode;
+                        if(transcodestatus=="transcoding") {
+                            alert("该视频正在转码中，请勿删除！");
+                            return;
+                        }
+
+
+                        if(window.confirm('确定删除吗？')){
+                            // 去掉html元素
+                            tempName = tempName.replace("<a>", "");
+                            tempName = tempName.replace("</a>", "");
+
+                            // 判断是否为目录
+                            var tempSize = oTabNow.rows[tempIdx].cells[cell_start + 1].innerHTML;
+                            if (tempSize.indexOf(folder_label) != -1) {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/filedelete",
+                                    data: {fileName: "@dir@", path: nowUserPath + tempName},
+                                    dataType: "json",
+                                    success: function (data) {
+                                        refreshUserFileList();
+                                    }
+                                });
                             }
-
-
+                            else {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/filedelete",
+                                    data: {fileName: tempName, path: nowUserPath},
+                                    dataType: "json",
+                                    success: function (data) {
+                                        refreshUserFileList();
+                                    }
+                                });
+                            }
+                            return true;
+                        }else{
+                            return false;
                         }
                     }
                 }
             }
         });}
+    }
+
+    function onekeymusic() {
+        $.ajax({
+            type: "POST",
+            url: "/search",
+            data: {key: ".mp3", path: "/"},
+            dataType: "json",
+            success: function (data) {
+                if (apa==undefined){
+                    var ap1 = new APlayer({
+                        container: document.getElementById('player_music'),
+                        autoplay: true,
+                        theme: '#FADFA3',
+                        fixed:true,
+                    });
+                    apa = ap1;
+                }
+                else apa.list.clear();
+                for (i in data){
+                    if (data[i].size.indexOf("Directory") != -1) continue;
+                    var mname = data[i].name;
+                    var suffix = mname.substring(mname.lastIndexOf(".")+1).toLowerCase();
+                    if (suffix=="mp3")
+                    {
+                        // 获取当前播放列表所有文件名
+                        var musiclist = new Array();
+                        for (j in apa.list.audios){
+                            musiclist.push(apa.list.audios[j].name);
+                        }
+                        // 要播放的音频在列表里就跳过，不在就添加列表
+                        var musicidx = musiclist.indexOf(mname);
+                        if (musicidx !=-1){
+                            continue;
+                        }
+                        else {
+                            apa.list.add([{
+                                name: data[i].name,
+                                artist: username,
+                                url: data[i].link,
+                                cover: '/images/aplayer.png'
+                            }]);
+                        }
+                    }
+                }
+                apa.play();
+            }
+        });
     }
 
 </script>

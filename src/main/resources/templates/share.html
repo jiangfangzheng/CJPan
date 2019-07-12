@@ -6,6 +6,10 @@
     <script src="/js/jquery.min.js"></script>
     <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
     <script src="/bootstrap/js/bootstrap.min.js"></script>
+    <!--在线音乐播放功能-->
+    <link rel="stylesheet" href="/aplayer/APlayer.min.css">
+    <script src="/aplayer/APlayer.min.js"></script>
+
     <style>
         a {
             font-family: "微软雅黑";
@@ -78,13 +82,27 @@
                 <input id="password" type="password" name="password" placeholder="密码" tabindex="2" />
             </div>
             <div class="modal-footer">
-                <button type="button" id="closeLogin" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" id="closeLogin" class="btn btn-secondary" data-dismiss="modal">关闭</button>
                 <button type="button" id="doLogin" class="btn btn-primary">登录</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal 图片预览-->
+<div class="modal fade" id="imgviewDlg" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">图片预览</h4>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <img id="imgview" src="/images/cf_code.jpg" style="max-height: 350px;display: inline-block">
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <div id="loading" class="loading" style="display: none;">
@@ -105,7 +123,7 @@
 <div id="imgbackground" class="blur"
      style="background: url('images/bg1.jpg');top:0; position: fixed;width: 100%;height: 100%;z-index: -1;">
 </div>
-
+<div id="player_music"></div>
 <div id="container" class="container"
      style="width: 90%;height:500px;margin-top:20px;margin-bottom: 20px; background-color: rgba(255,255,255,0.7);border-radius: 10px;">
     <div class="header clearfix" style="margin: 0px; ">
@@ -131,7 +149,7 @@
         <img src="/images/p_file.png" style="height: 150px;width: 150px;"/></a>
     </div>
     <div>
-    <p style="text-align: center"><a id="FileName"></a></p>
+    <p style="text-align: center"><a id="FileName" onclick="fileplay();"></a></p>
     </div>
 
     <div style="height: 100px;text-align:center">
@@ -150,6 +168,12 @@
 
 </div>
 <script>
+    // 文件播放路径
+    var downloadurl="";
+    // 音乐播放对象
+    var apa = undefined;
+    // 用户名
+    var username;
 
     //简单登录操作
     $("#doLogin").click(function (e) {
@@ -218,7 +242,8 @@
             window.close();
         }
         var Username=$("#userLName").text();
-        if (Username.slice(3)!="null"){
+        username = Username.slice(3);
+        if (username!="null"){
             $("#loginBtn").css("display","none");
         }else {
             $("#userLName").css("display","none");
@@ -231,6 +256,7 @@
             success: function (data) {
                 if (data.success) {
                     var nowLink = data.msg;
+                    downloadurl = nowLink;
                     var name_list = nowLink.split("/");
                     var file_name = name_list[name_list.length - 1];
                     $(".Filebox").css("display","block")
@@ -294,6 +320,7 @@
             return false;
     }
 
+    // 下载文件按钮响应函数
     function download() {
         // 不支持ie浏览器
         if (isIE() == true) {
@@ -335,6 +362,57 @@
             }
         });
     });
+
+    // 音乐播放响应函数
+    function musicplay() {
+        if (apa==undefined) {
+            var ap1 = new APlayer({
+                container: document.getElementById('player_music'),
+                autoplay: true,
+                theme: '#FADFA3',
+                fixed:true,
+                audio: [{
+                    name: $("#FileName").text(),
+                    artist: username,
+                    url: downloadurl,
+                    cover: '/images/aplayer.png'
+                }]
+            });
+            apa = ap1;
+        }
+        else {
+            apa.list.clear();
+            apa.list.add([{
+                name: $("#FileName").text(),
+                artist: username,
+                url: downloadurl,
+                cover: '/images/aplayer.png'
+            }]);
+            apa.play();
+        }
+    }
+
+    // 视频播放响应函数
+    function videoplay(){
+        window.open(encodeURI(encodeURI("/onlineplayer?fileName=" + $("#FileName").text() + "&filePath=" + downloadurl)));
+    }
+
+    // 文件播放响应，根据不同的文件进行文件播放
+    function fileplay() {
+        var disNowFileName = $("#FileName").text();
+        var suffix = disNowFileName.substring(disNowFileName.lastIndexOf(".")+1).toLowerCase();
+        if(suffix=="mp3") {
+            musicplay();
+        }
+        else if(suffix=="mp4" || suffix=="flv" || suffix=="avi" || suffix=="wmv"){
+            videoplay();
+        }
+        else if(suffix=="jpg" || suffix=="jpeg" || suffix=="png" || suffix=="gif" || suffix=="bmp"){
+            document.getElementById("imgview").src=downloadurl;
+            $('#imgviewDlg').modal('show');
+        }else return;
+    }
+
 </script>
 
 

@@ -1,13 +1,14 @@
 package com.whut.pan.controller;
 
+import com.whut.pan.dao.model.User;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static com.whut.pan.util.SystemUtil.getUserNameBySession;
-
 
 /**
  * 主要页面映射
@@ -17,6 +18,8 @@ import static com.whut.pan.util.SystemUtil.getUserNameBySession;
 @Controller
 public class IndexController {
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     /**
      * 管理页面
      *
@@ -24,30 +27,24 @@ public class IndexController {
      */
     @RequestMapping("/")
     public ModelAndView admin(HttpServletRequest request) {
+        User user = (User) request.getSession().getAttribute("user");
+        String userName = user.getUserName();
         ModelAndView modelAndView = new ModelAndView("index");
-        modelAndView.addObject("author", getUserNameBySession(request));
+        modelAndView.addObject("author", userName);
         return modelAndView;
     }
 
     /**
-     * 测试页面
-     *
-     * @return 页面
-     */
-    @RequestMapping("/test1")
-    public String test() {
-        return "test";
-    }
-
-    /**
-     * 在线播放视频
+     * onlineplayer页面
      *
      * @return 页面
      */
     @RequestMapping("/onlineplayer")
     public ModelAndView onlineplayer(HttpServletRequest request, String fileName, String filePath) {
+        User user = (User) request.getSession().getAttribute("user");
+        String userName = (user==null)?"null":user.getUserName();
         ModelAndView modelAndView = new ModelAndView("onlineplayer");
-        modelAndView.addObject("author", getUserNameBySession(request));
+        modelAndView.addObject("author", userName);
         modelAndView.addObject("fileName", fileName);
         modelAndView.addObject("filePath", filePath);
         return modelAndView;

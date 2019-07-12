@@ -1,4 +1,4 @@
-package com.whut.pan.domain;
+package com.whut.pan.model;
 
 /**
  * Created by zc on 2018/11/2.

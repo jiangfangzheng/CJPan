@@ -1,4 +1,4 @@
-package com.whut.pan.domain;
+package com.whut.pan.dao.model;
 
 /**
  * 用户实体
@@ -7,7 +7,6 @@ package com.whut.pan.domain;
  * @author Sandeepin
  */
 public class User {
-
     private int id;
 
     private String userName;

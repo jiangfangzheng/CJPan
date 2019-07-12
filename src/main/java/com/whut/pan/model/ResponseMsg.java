@@ -1,4 +1,4 @@
-package com.whut.pan.domain;
+package com.whut.pan.model;
 
 /**
  * 给前台返回的操作结果
@@ -6,7 +6,6 @@ package com.whut.pan.domain;
  * @author Sandeepin
  */
 public class ResponseMsg {
-
     private boolean success = false;
 
     private String msg = "";

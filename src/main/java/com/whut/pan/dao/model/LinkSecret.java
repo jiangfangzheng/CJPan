@@ -1,12 +1,20 @@
-package com.whut.pan.domain;
+package com.whut.pan.dao.model;
 
 import java.util.Date;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * Created by zc on 2018/10/18.
  */
+@Entity
+@Table(name = "linkSecret")
 public class LinkSecret {
-
+    @Id
+    @GeneratedValue
     private int id;
 
     private String fileName;
@@ -19,10 +27,12 @@ public class LinkSecret {
 
     private String secret;
 
+    // 下载次数
     private int downloadNum;
 
     private String secretLink;
 
+    // 分享时间
     private Date shareDate;
 
     public Date getShareDate() {

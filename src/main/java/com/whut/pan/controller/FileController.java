@@ -7,6 +7,7 @@ import static com.whut.pan.util.StringUtil.stringSlashToOne;
 import static com.whut.pan.util.WebUtil.getSessionUserName;
 
 import com.alibaba.druid.support.json.JSONUtils;
+import com.alibaba.fastjson.JSONObject;
 import com.whut.pan.dao.model.LinkSecret;
 import com.whut.pan.dao.model.User;
 import com.whut.pan.model.FileMsg;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -761,6 +763,27 @@ public class FileController {
             j.setMsg("");
         }
         return j;
+    }
+
+    /**
+     * 获取云盘服务器所在盘磁盘空间大小
+     *
+     * @param request
+     */
+    @GetMapping(value = "/getspacesize")
+    @ResponseBody
+    public ResponseMsg getSpaceSize(HttpServletRequest request) {
+        File file = new File(fileRootPath);
+        String totalSpace = String.valueOf(file.getTotalSpace() / 1024 / 1024 / 1024);
+        String freeSpace = String.valueOf(file.getFreeSpace() / 1024 / 1024 / 1024);
+        Map<String, String> spaceMap = new HashMap<>();
+        spaceMap.put("totalSpace", totalSpace);
+        spaceMap.put("freeSpace", freeSpace);
+        ResponseMsg responseMsg = new ResponseMsg();
+        responseMsg.setSuccess(true);
+        responseMsg.setMsg(JSONObject.toJSONString(spaceMap));
+        return responseMsg;
+
     }
 
 }

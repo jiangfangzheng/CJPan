@@ -72,6 +72,7 @@
                 margin-top: 7px !important;
             }
         }
+        .strogeSpaceBar{background: #4cae4c; height: 20px;text-align: center;font-weight: bold;font-family: 'Microsoft Yahei'; color: #FFF;}
     </style>
 
 <body>
@@ -140,6 +141,12 @@
     <br/>
     <!-- /.row -->
 
+    <ol id="storgeBread" class="breadcrumb mybc" style="text-align: center;">
+        <div id="totalSpace" style="background-color: #8c8c8c; text-align: left;height: 20px;margin-top: 10px;border: 2px solid #6b6b6b;border-radius: 15px;">
+            <div id="freeSpace" class="strogeSpaceBar" style="width:90%;border-right: 3px solid white;height: 100%;border-radius: 15px;">213 GB</div>
+        </div>
+        <p id="totalSpaceInfo" style="display: inline-block;font-weight: bold;font-family: 'Microsoft Yahei';text-align: right; margin-top: 10px">200 GB / 100GB / 300 GB （剩余 / 已用 / 总容量）</p>
+    </ol>
     <ol id="breadcrumb" class="breadcrumb mybc">
         <li onclick="jumpToRootPath()"><a>根目录</a></li>
     </ol>
@@ -600,6 +607,37 @@
             }
         }
         $.ajax({
+            type: "GET",
+            url: "/getspacesize",
+            data: {},
+            dataType: "json",
+            success: function (data) {
+                if (data.success){
+                    var storgeinfo = data.msg;
+                    var jsonstorgeinfo = $.parseJSON(storgeinfo);
+                    var freepercentage = parseInt(Math.round(parseFloat(jsonstorgeinfo.freeSpace) / parseFloat(jsonstorgeinfo.totalSpace) * 100));
+                    var usedpercentage = parseInt(100 - freepercentage);
+
+                    if (freepercentage > 75)
+                        $("#freeSpace").css("background-color","#4cae4c");
+                    else if(freepercentage > 35 && freepercentage <= 75)
+                        $("#freeSpace").css("background-color","#e2bf11");
+                    else if(freepercentage <= 35)
+                        $("#freeSpace").css("background-color","#ea2121");
+
+                    var strFree = (freepercentage).toString() + "%";
+                    var strUsed = (usedpercentage).toString() + "%";
+                    $("#freeSpace").width(strFree);
+                    $("#freeSpace").text(jsonstorgeinfo.freeSpace + " GB");
+                    // $("#usedSpace").width(strUsed);
+                    $("#totalSpaceInfo").text(jsonstorgeinfo.freeSpace + " GB / " + (parseFloat(jsonstorgeinfo.totalSpace)-parseFloat(jsonstorgeinfo.freeSpace)).toString()  +
+                        "GB / " + jsonstorgeinfo.totalSpace + " GB （剩余 / 已用 / 总容量）");
+
+                }
+            }
+        });
+
+        $.ajax({
             type: "POST",
             url: "/userfilelist",
             data: {path: nowUserPath},
@@ -675,7 +713,7 @@
                             var fileType = tempName.split(".");
                             fileType = fileType[fileType.length - 1];
                             fileType = fileType.toLowerCase();
-                            if (fileType.indexOf("mp4") != -1 || fileType.indexOf("flv") != -1)
+                            if (fileType.indexOf("mp4") != -1 || fileType.indexOf("flv") != -1 || fileType.indexOf("mkv") != -1)
                             {
                                 window.open("/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + encodeURI(encodeURI(downloadlist[tempIdx - 1])));
                             }
@@ -718,14 +756,20 @@
                                     }
                                 }
                             }
-                            else if (fileType.indexOf("rmvb") != -1 || fileType.indexOf("mkv") != -1 || fileType.indexOf("3gp") != -1 || fileType.indexOf("rm") != -1 || fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1)
+                            else if (fileType.indexOf("rmvb") != -1 || fileType.indexOf("3gp") != -1 || fileType.indexOf("rm") != -1 || fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1)
                             {
                                 // 可以用IE播放的特殊处理
-                                if(fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1){
-                                    if(window.confirm("avi和wmv格式的文件不能用chrome浏览器在线播放，只支持IE浏览器的在线播放，是否继续播放？")) {
+                                if(fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1 || fileType.indexOf("3gp") != -1){
+                                    if(window.confirm("avi、3gp和wmv格式的文件不能用chrome浏览器在线播放，只支持IE浏览器的在线播放，是否继续播放？")) {
                                         // window.open("/onlineplayer?fileName=" + tempName + "&filePath=" + downloadlist[tempIdx - 1]);
-                                        $("#copyIeplayLink").text("http://" + window.location.host + "/onlineplayer?fileName=" + encodeURI(tempName) + "&filePath=" + encodeURI(downloadlist[tempIdx - 1]));
+                                        $("#copyIeplayLink").text("http://" + window.location.host + "/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + encodeURI(encodeURI(downloadlist[tempIdx - 1])));
                                         $("#copyIeplayLink").click();
+                                        return;
+                                    }
+                                }
+                                else if(fileType.indexOf("rmvb") != -1 || fileType.indexOf("rm") != -1){
+                                    if(window.confirm("rmvb和rm格式的文件在线播放可能会有小bug，并只支持chrome浏览器，是否继续播放？")) {
+                                        window.open("/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + encodeURI(encodeURI(downloadlist[tempIdx - 1])));
                                         return;
                                     }
                                 }
@@ -1298,7 +1342,7 @@
                             var fileType = tempName.split(".");
                             fileType = fileType[fileType.length - 1];
                             fileType = fileType.toLowerCase();
-                            if (fileType.indexOf("mp4") != -1 || fileType.indexOf("flv") != -1)
+                            if (fileType.indexOf("mp4") != -1 || fileType.indexOf("flv") != -1 || fileType.indexOf("mkv") != -1)
                             {
                                 window.open("/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + encodeURI(encodeURI(downloadlist[tempIdx - 1])));
                             }
@@ -1341,13 +1385,20 @@
                                     }
                                 }
                             }
-                            else if (fileType.indexOf("rmvb") != -1 || fileType.indexOf("wmv") != -1 || fileType.indexOf("mkv") != -1|| fileType.indexOf("avi") != -1|| fileType.indexOf("3gp") != -1 || fileType.indexOf("rm") != -1)
+                            else if (fileType.indexOf("rmvb") != -1 || fileType.indexOf("3gp") != -1 || fileType.indexOf("rm") != -1 || fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1)
                             {
                                 // 可以用IE播放的特殊处理
-                                if(fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1){
-                                    if(window.confirm("avi和wmv格式的文件不能用chrome浏览器在线播放，只支持IE浏览器的在线播放，是否继续播放？")) {
-                                        $("#copyIeplayLink").text("http://" + window.location.host + "/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + (encodeURI(downloadlist[tempIdx - 1])));
+                                if(fileType.indexOf("avi") != -1 || fileType.indexOf("wmv") != -1 || fileType.indexOf("3gp") != -1){
+                                    if(window.confirm("avi、3gp和wmv格式的文件不能用chrome浏览器在线播放，只支持IE浏览器的在线播放，是否继续播放？")) {
+                                        // window.open("/onlineplayer?fileName=" + tempName + "&filePath=" + downloadlist[tempIdx - 1]);
+                                        $("#copyIeplayLink").text("http://" + window.location.host + "/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + encodeURI(encodeURI(downloadlist[tempIdx - 1])));
                                         $("#copyIeplayLink").click();
+                                        return;
+                                    }
+                                }
+                                else if(fileType.indexOf("rmvb") != -1 || fileType.indexOf("rm") != -1){
+                                    if(window.confirm("rmvb和rm格式的文件在线播放可能会有小bug，并只支持chrome浏览器，是否继续播放？")) {
+                                        window.open("/onlineplayer?fileName=" + encodeURI(encodeURI(tempName)) + "&filePath=" + encodeURI(encodeURI(downloadlist[tempIdx - 1])));
                                         return;
                                     }
                                 }
@@ -1383,7 +1434,8 @@
                                     }
                                 }
                             }
-                            else if(fileType.indexOf("jpg") != -1 || fileType.indexOf("gif") != -1 || fileType.indexOf("png") != -1 || fileType.indexOf("jpeg") != -1 || fileType.indexOf("bmp") != -1){
+                            else if(fileType.indexOf("jpg") != -1 || fileType.indexOf("gif") != -1 || fileType.indexOf("png") != -1 || fileType.indexOf("jpeg") != -1 || fileType.indexOf("bmp") != -1)
+                            {
                                 document.getElementById("imgview").src=downloadlist[tempIdx - 1];
                                 $('#imgviewDlg').modal('show');
                             }

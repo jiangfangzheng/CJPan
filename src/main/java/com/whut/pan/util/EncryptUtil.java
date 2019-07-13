@@ -4,16 +4,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.IvParameterSpec;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 /**
  * @author Sandeepin
@@ -23,14 +22,14 @@ public class EncryptUtil {
 
     private static Logger logger = LoggerFactory.getLogger(EncryptUtil.class);
 
-    private final byte[] DESIV = new byte[] {0x12, 0x34, 0x56, 120, (byte) 0x90, (byte) 0xab, (byte) 0xcd, (byte) 0xef};
     // 向量
+    private final byte[] DESIV = new byte[] {0x12, 0x34, 0x56, 120, (byte) 0x90, (byte) 0xab, (byte) 0xcd, (byte) 0xef};
 
-    private AlgorithmParameterSpec iv = null;// 加密算法的参数接口
 
-    private Key key = null;
+    // 加密算法的参数接口
+    private AlgorithmParameterSpec iv;
 
-    private String charset = "utf-8";
+    private Key key;
 
     /**
      * 初始化
@@ -39,10 +38,11 @@ public class EncryptUtil {
      * @throws Exception
      */
     public EncryptUtil(String deSkey, String charset) throws Exception {
+        String charset1 = "utf-8";
         if (StringUtils.isNotBlank(charset)) {
-            this.charset = charset;
+            charset1 = charset;
         }
-        DESKeySpec keySpec = new DESKeySpec(deSkey.getBytes(this.charset));// 设置密钥参数
+        DESKeySpec keySpec = new DESKeySpec(deSkey.getBytes(charset1));// 设置密钥参数
         iv = new IvParameterSpec(DESIV);// 设置向量
         SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");// 获得密钥工厂
         key = keyFactory.generateSecret(keySpec);// 得到密钥对象
@@ -58,11 +58,12 @@ public class EncryptUtil {
      * @date 2017年4月19日 上午9:40:53
      */
     public String encode(String data) throws Exception {
-        Cipher enCipher = Cipher.getInstance("DES/CBC/PKCS5Padding");// 得到加密对象Cipher
-        enCipher.init(Cipher.ENCRYPT_MODE, key, iv);// 设置工作模式为加密模式，给出密钥和向量
-        byte[] pasByte = enCipher.doFinal(data.getBytes("utf-8"));
-        BASE64Encoder base64Encoder = new BASE64Encoder();
-        String encodePlus = base64Encoder.encode(pasByte);
+        // 得到加密对象Cipher
+        Cipher enCipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
+        // 设置工作模式为加密模式，给出密钥和向量
+        enCipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        byte[] pasByte = enCipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        String encodePlus = Base64.getEncoder().encodeToString(pasByte);
         String encodePure = encodePlus.replace("+", "_");
         encodePure = encodePure.replace("/", "-");
         if (SystemUtil.isWindows()) {
@@ -94,8 +95,7 @@ public class EncryptUtil {
         data = data.replace("~", "\r\n");
         Cipher deCipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
         deCipher.init(Cipher.DECRYPT_MODE, key, iv);
-        BASE64Decoder base64Decoder = new BASE64Decoder();
-        byte[] pasByte = deCipher.doFinal(base64Decoder.decodeBuffer(data));
-        return new String(pasByte, "UTF-8");
+        byte[] pasByte = deCipher.doFinal(Base64.getDecoder().decode(data));
+        return new String(pasByte, StandardCharsets.UTF_8);
     }
 }

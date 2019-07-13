@@ -6,16 +6,16 @@ import static com.whut.pan.util.FfmpegUtil.ffmpegTaskMap;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.ApplicationHome;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConvertVideo {
-    private static final String projectDir = new ApplicationHome(ConvertVideo.class).getDir().toString();
-
+public final class ConvertVideo {
     private static Logger logger = LoggerFactory.getLogger(ConvertVideo.class);
+
+    private ConvertVideo() {
+    }
 
     /**
      * 视频转化
@@ -51,7 +51,7 @@ public class ConvertVideo {
      * @return
      */
     private static String getFfmpegPath() {
-        return projectDir + File.separator + "ffmpeg";
+        return fileRootPath + File.separator + "ffmpeg";
     }
 
     /**

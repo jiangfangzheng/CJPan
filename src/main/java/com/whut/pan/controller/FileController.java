@@ -6,7 +6,6 @@ import static com.whut.pan.util.StringUtil.getfilesuffix;
 import static com.whut.pan.util.StringUtil.stringSlashToOne;
 import static com.whut.pan.util.WebUtil.getSessionUserName;
 
-import com.alibaba.druid.support.json.JSONUtils;
 import com.alibaba.fastjson.JSONObject;
 import com.whut.pan.dao.model.LinkSecret;
 import com.whut.pan.dao.model.User;
@@ -279,7 +278,7 @@ public class FileController {
             path = "/";
         }
         logger.warn("transCodeStatus():" + path);
-        logger.warn("ffmpegTaskMap:" + JSONUtils.toJSONString(ffmpegTaskMap));
+        logger.warn("ffmpegTaskMap:" + JSONObject.toJSONString(ffmpegTaskMap));
         ResponseMsg responseMsg = new ResponseMsg();
         responseMsg.setMsg("noneed");
         responseMsg.setSuccess(true);

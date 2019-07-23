@@ -143,9 +143,9 @@
 
     <ol id="storgeBread" class="breadcrumb mybc" style="text-align: center;">
         <div id="totalSpace" style="background-color: #8c8c8c; text-align: left;height: 20px;margin-top: 10px;border: 2px solid #6b6b6b;border-radius: 15px;">
-            <div id="freeSpace" class="strogeSpaceBar" style="width:90%;border-right: 3px solid white;height: 100%;border-radius: 15px;">213 GB</div>
+            <div id="freeSpace" class="strogeSpaceBar" style="width:0%;border-right: 3px solid white;height: 100%;border-radius: 15px;">0 GB</div>
         </div>
-        <p id="totalSpaceInfo" style="display: inline-block;font-weight: bold;font-family: 'Microsoft Yahei';text-align: right; margin-top: 10px">200 GB / 100GB / 300 GB （剩余 / 已用 / 总容量）</p>
+        <p id="totalSpaceInfo" style="display: inline-block;font-weight: bold;font-family: 'Microsoft Yahei';text-align: right; margin-top: 10px">0 GB / 0 GB / 0 GB （剩余 / 已用 / 总容量）</p>
     </ol>
     <ol id="breadcrumb" class="breadcrumb mybc">
         <li onclick="jumpToRootPath()"><a>根目录</a></li>
@@ -627,11 +627,12 @@
 
                     var strFree = (freepercentage).toString() + "%";
                     var strUsed = (usedpercentage).toString() + "%";
-                    $("#freeSpace").width(strFree);
+                    // $("#freeSpace").width(strFree);
+                    document.getElementById("freeSpace").style.width = strFree;
                     $("#freeSpace").text(jsonstorgeinfo.freeSpace + " GB");
                     // $("#usedSpace").width(strUsed);
-                    $("#totalSpaceInfo").text(jsonstorgeinfo.freeSpace + " GB / " + (parseFloat(jsonstorgeinfo.totalSpace)-parseFloat(jsonstorgeinfo.freeSpace)).toString()  +
-                        "GB / " + jsonstorgeinfo.totalSpace + " GB （剩余 / 已用 / 总容量）");
+                    $("#totalSpaceInfo").text(parseFloat(jsonstorgeinfo.freeSpace).toFixed(2) + " GB / " + (parseFloat(jsonstorgeinfo.totalSpace)-parseFloat(jsonstorgeinfo.freeSpace)).toFixed(2).toString()  +
+                        "GB / " + parseFloat(jsonstorgeinfo.totalSpace).toFixed(2) + " GB （剩余 / 已用 / 总容量）");
 
                 }
             }

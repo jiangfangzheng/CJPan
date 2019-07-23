@@ -75,15 +75,20 @@
                 </button>
             </div>
             <div class="modal-body">
-                <label for="userName" >用户名</label>
-                <input id="userName" type="text" name="email" placeholder="用户名" tabindex="1"  />
-               </br>
-                <label for="password" >密码</label>
-                <input id="password" type="password" name="password" placeholder="密码" tabindex="2" />
+                <div style="text-align: center">
+                    <label for="userName" style="width: 60px;">用户名</label>
+                    &nbsp;&nbsp;
+                    <input id="userName" type="text" name="email" placeholder="用户名" tabindex="1"  />
+                </div>
+                <div style="text-align: center; margin-top: 20px">
+                    <label for="password" style="width: 60px;">密码</label>
+                    &nbsp;&nbsp;
+                    <input id="password" type="password" name="password" placeholder="密码" tabindex="2" />
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" id="closeLogin" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            <div class="modal-footer" style="text-align: center">
                 <button type="button" id="doLogin" class="btn btn-primary">登录</button>
+                <button type="button" id="closeLogin" class="btn btn-secondary" data-dismiss="modal">关闭</button>
             </div>
         </div>
     </div>

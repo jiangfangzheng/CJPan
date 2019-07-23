@@ -772,17 +772,26 @@ public class FileController {
     @GetMapping(value = "/getspacesize")
     @ResponseBody
     public ResponseMsg getSpaceSize(HttpServletRequest request) {
-        File file = new File(fileRootPath);
-        String totalSpace = String.valueOf(file.getTotalSpace() / 1024 / 1024 / 1024);
-        String freeSpace = String.valueOf(file.getFreeSpace() / 1024 / 1024 / 1024);
+        // 普通用户限制80G，guest用户限制40G，
+        String userName = getSessionUserName(request);
         Map<String, String> spaceMap = new HashMap<>();
-        spaceMap.put("totalSpace", totalSpace);
+        spaceMap.put("totalSpace", "80");
+        double totalSpace = 80;
+        if ("guest".equals(userName)) {
+            spaceMap.put("totalSpace", "40");
+            totalSpace = 40;
+        }
+        long dirlength = SystemUtil.getDirSpaceSize(fileRootPath + userName);
+        double dirlengthDouble = dirlength / 1024.0 / 1024 / 1024;
+        String usedeSpace = String.format("%.2f", dirlengthDouble);
+        logger.warn("usedeSpace:{}", usedeSpace);
+        String freeSpace = String.format("%.2f", totalSpace - Double.valueOf(usedeSpace));
+        logger.warn("freeSpace:{}", freeSpace);
         spaceMap.put("freeSpace", freeSpace);
         ResponseMsg responseMsg = new ResponseMsg();
         responseMsg.setSuccess(true);
         responseMsg.setMsg(JSONObject.toJSONString(spaceMap));
         return responseMsg;
-
     }
 
 }

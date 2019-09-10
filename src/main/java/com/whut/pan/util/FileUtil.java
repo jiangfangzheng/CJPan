@@ -1,9 +1,15 @@
 package com.whut.pan.util;
 
+import com.whut.pan.model.FileMsg;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+
+import static com.whut.pan.util.StringUtil.getfilesuffix;
 
 /**
  * @author Sandeepin
@@ -12,6 +18,8 @@ import java.io.File;
 public class FileUtil {
 
     private static Logger logger = LoggerFactory.getLogger(FileUtil.class);
+
+    private static final SimpleDateFormat FORMATTER_NORMAL_DATE = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * 获得分片文件临时保存路径
@@ -199,5 +207,63 @@ public class FileUtil {
     public static boolean deleteDir(String dirName) {
         File dir = new File(dirName);
         return deleteDir(dir);
+    }
+
+    public static boolean isVideo(String fileName) {
+        String suffix = FilenameUtils.getExtension(fileName);
+        return "mkv".equalsIgnoreCase(suffix) || "rmvb".equalsIgnoreCase(suffix) || "avi".equalsIgnoreCase(suffix)
+                || "wmv".equalsIgnoreCase(suffix) || "3gp".equalsIgnoreCase(suffix) || "rm".equalsIgnoreCase(suffix);
+    }
+
+    public static boolean isMp4(String fileName) {
+        return "mp4".equalsIgnoreCase(FilenameUtils.getExtension(fileName));
+    }
+
+    /**
+     * 替换磁盘目录为下载目录
+     *
+     * @param filePath 待处理的文件路径
+     * @param rootPath 磁盘上存储文件的跟目录
+     * @param downPath url映射的下载目录
+     * @return 下载目录
+     */
+    public static String rootPathTodownPath(String filePath, String rootPath, String downPath) {
+        String link = filePath.replace("\\", "/");
+        return link.replace(rootPath, downPath);
+    }
+
+    /**
+     * 读取文件信息并转为Json对象体
+     *
+     * @param file 文件对象
+     * @param userName 用户名
+     * @param rootPath 磁盘上存储文件的跟目录
+     * @param downPath url映射的下载目录
+     * @return FileMsg
+     */
+    public static FileMsg fileToFileMsg(File file, String userName, String rootPath, String downPath) {
+        FileMsg fileMsg = new FileMsg();
+        if (file.isFile()) {
+            fileMsg.setName(file.getName());
+            fileMsg.setSize(FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(file)));
+            fileMsg.setTime(FORMATTER_NORMAL_DATE.format(file.lastModified()));
+            // 文件返回下载地址 （D:/user/1.txt 处理为 /data/user/1.txt）
+            fileMsg.setLink(rootPathTodownPath(file.getPath(), rootPath, downPath));
+            if (isMp4(file.getName())) {
+                fileMsg.setType("mp4");
+            } else if (isVideo(file.getName())) {
+                fileMsg.setType("video");
+            } else {
+                fileMsg.setType("file");
+            }
+        } else {
+            fileMsg.setName(file.getName());
+            fileMsg.setSize("Directory");
+            fileMsg.setType("dir");
+            // 目录返回用户相对path （D:/user/dir1/dir2 处理为 /dir1/dir2）
+            fileMsg.setLink(rootPathTodownPath(file.getPath(), rootPath + userName, ""));
+            fileMsg.setTime(FORMATTER_NORMAL_DATE.format(file.lastModified()));
+        }
+        return fileMsg;
     }
 }

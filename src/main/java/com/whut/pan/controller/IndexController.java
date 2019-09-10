@@ -25,11 +25,11 @@ public class IndexController {
      *
      * @return 页面
      */
-    @RequestMapping("/")
+    @RequestMapping("/old")
     public ModelAndView admin(HttpServletRequest request) {
         User user = (User) request.getSession().getAttribute("user");
         String userName = user.getUserName();
-        ModelAndView modelAndView = new ModelAndView("index");
+        ModelAndView modelAndView = new ModelAndView("old");
         modelAndView.addObject("author", userName);
         return modelAndView;
     }

@@ -1,10 +1,15 @@
 package com.whut.pan.model;
 
+import java.util.UUID;
+
 /**
  * @author Sandeepin
  * 2018/2/11 0011
  */
 public class FileMsg {
+
+    private String key;
+
     private String name;
 
     private String link;
@@ -12,6 +17,8 @@ public class FileMsg {
     private String size;
 
     private String time;
+
+    private String type;
 
     private String description;
 
@@ -23,6 +30,10 @@ public class FileMsg {
      * failed：转码失败
      */
     private String transcode = "noneed";
+
+    public FileMsg() {
+        this.key = String.valueOf(this.hashCode()) + System.currentTimeMillis();
+    }
 
     public String getSize() {
         return size;
@@ -70,5 +81,21 @@ public class FileMsg {
 
     public void setTranscode(String transcode) {
         this.transcode = transcode;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

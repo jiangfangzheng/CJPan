@@ -4,7 +4,7 @@ import static com.whut.pan.util.ConvertVideo.convertVideo;
 import static com.whut.pan.util.FfmpegUtil.ffmpegTaskMap;
 import static com.whut.pan.util.StringUtil.getfilesuffix;
 import static com.whut.pan.util.StringUtil.stringSlashToOne;
-import static com.whut.pan.util.WebUtil.getSessionUserName;
+import static com.whut.pan.util.WebUtil.getUserNameByRequest;
 
 import com.alibaba.fastjson.JSONObject;
 import com.whut.pan.dao.model.LinkSecret;
@@ -119,7 +119,7 @@ public class FileController {
             return j;
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         // 上传文件
         boolean b = fileService.upload(file, userName, path);
         // 反馈用户信息
@@ -145,7 +145,7 @@ public class FileController {
             return j;
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         //        String userName ="zc";
         // 下载文件，获取下载路径,这个是 个映射的路径
         String link = fileService.download(fileName, userName, path);
@@ -178,7 +178,7 @@ public class FileController {
             path = "/";
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         List<FileMsg> fileMsgList = fileService.search(key, userName, path);
 
         // 判断文件转码情况
@@ -228,7 +228,7 @@ public class FileController {
             path = "/";
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         // 列出用户文件
         List<FileMsg> fileMsgList = fileService.userFileList(userName, path);
 
@@ -308,7 +308,7 @@ public class FileController {
             return j;
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         // 删除文件
         Boolean[] b = fileService.userFileDelete(fileName, userName, path);
         boolean flag = true;
@@ -339,7 +339,7 @@ public class FileController {
             return j;
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         // 重命名文件
         boolean b = fileService.userFileRename(oldName, newName, userName, path);
         String saveFilePath = fileRootPath + userName + "/" + path;
@@ -372,7 +372,7 @@ public class FileController {
             return j;
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         // path = /pan/userName/当前path
         if (!SystemUtil.isWindows()) {
             path = "/pan/" + userName + path;
@@ -543,7 +543,7 @@ public class FileController {
             return j;
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         String filePathAndName = userName + "/" + path + "/" + fileName;
         filePathAndName = stringSlashToOne(filePathAndName);
         logger.warn("filePathAndName:" + filePathAndName);
@@ -619,7 +619,7 @@ public class FileController {
             return j;
         }
         // 获取用户名
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         // 移动文件
         boolean b = fileService.userFileDirMove(fileName, oldPath, newPath, userName);
         if (b) {
@@ -648,7 +648,7 @@ public class FileController {
         String chunk = request.getParameter("chunk");
         logger.warn("chunk:" + chunk);
         String fileName = file.getOriginalFilename();
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         MultipartHttpServletRequest Murequest = (MultipartHttpServletRequest) request;
         Map<String, MultipartFile> files = Murequest.getFileMap();
         logger.warn("执行前---------");
@@ -697,7 +697,7 @@ public class FileController {
         logger.warn("checkChunk+chunk:" + chunk);
         String chunkSize = request.getParameter("chunkSize");
         logger.warn("checkChunk+chunkSize:" + chunkSize);
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         logger.warn(tempPath);
         String tempDir = FileUtil.getTempDir(tempPath, userName, fileName);
         tempDir = StringUtil.stringSlashToOne(tempDir);
@@ -773,7 +773,7 @@ public class FileController {
     @ResponseBody
     public ResponseMsg getSpaceSize(HttpServletRequest request) {
         // 普通用户限制80G，guest用户限制40G，
-        String userName = getSessionUserName(request);
+        String userName = getUserNameByRequest(request);
         Map<String, String> spaceMap = new HashMap<>();
         spaceMap.put("totalSpace", "80");
         double totalSpace = 80;
@@ -791,6 +791,14 @@ public class FileController {
         ResponseMsg responseMsg = new ResponseMsg();
         responseMsg.setSuccess(true);
         responseMsg.setMsg(JSONObject.toJSONString(spaceMap));
+
+        String aString = "ddssddsd";
+
+        int aaa = aString.lastIndexOf("d");
+
+
+        
+
         return responseMsg;
     }
 

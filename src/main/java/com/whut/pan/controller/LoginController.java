@@ -3,7 +3,7 @@ package com.whut.pan.controller;
 import static com.whut.pan.service.impl.FileServiceImpl.fileRootPath;
 import static com.whut.pan.util.FileUtil.deleteDir;
 import static com.whut.pan.util.SystemUtil.isWindows;
-import static com.whut.pan.util.WebUtil.getSessionUserName;
+import static com.whut.pan.util.WebUtil.getUserNameByRequest;
 
 import com.whut.pan.dao.model.User;
 import com.whut.pan.model.ResponseMsg;
@@ -85,7 +85,7 @@ public class LoginController {
     public String loginOut(HttpServletRequest request) {
         if (!isWindows()) {
             // 非windows环境下要删除用户文件
-            deleteDir(fileRootPath + getSessionUserName(request));
+            deleteDir(fileRootPath + getUserNameByRequest(request));
         }
 
         // 清除session

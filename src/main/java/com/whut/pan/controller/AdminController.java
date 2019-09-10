@@ -1,6 +1,6 @@
 package com.whut.pan.controller;
 
-import static com.whut.pan.util.WebUtil.getSessionUserName;
+import static com.whut.pan.util.WebUtil.getUserNameByRequest;
 
 import com.whut.pan.dao.model.VerifyCode;
 import com.whut.pan.model.ResponseMsg;
@@ -64,7 +64,7 @@ public class AdminController {
      */
     @RequestMapping(value = "/registerCode")
     public ModelAndView registerCode(ModelAndView modelAndView, HttpServletRequest request) {
-        String username = getSessionUserName(request);
+        String username = getUserNameByRequest(request);
         if ("sandeepin".equals(username) || "cflower".equals(username)) {
             modelAndView.setViewName("registerCode");
             return modelAndView;
@@ -89,7 +89,7 @@ public class AdminController {
         VerifyCode verifyCode = new VerifyCode();
         verifyCode.setState(false);
         verifyCode.setRegisterCode(registerCode);
-        verifyCode.setOperatePerson(getSessionUserName(request));
+        verifyCode.setOperatePerson(getUserNameByRequest(request));
         verifyCode.setDate(new Date());
         verifyCode.setCustomName(customName);
         boolean result = iVerifyCodeService.save(verifyCode);

@@ -2,6 +2,9 @@ package com.whut.pan.service.impl;
 
 import static com.whut.pan.util.FileUtil.delete;
 import static com.whut.pan.util.FileUtil.fileSizeToString;
+import static com.whut.pan.util.FileUtil.fileToFileMsg;
+import static com.whut.pan.util.FileUtil.isMp4;
+import static com.whut.pan.util.FileUtil.isVideo;
 import static com.whut.pan.util.FileUtil.renameFile;
 import static com.whut.pan.util.StringUtil.getfilesuffix;
 import static com.whut.pan.util.StringUtil.stringSlashToOne;
@@ -123,44 +126,83 @@ public class FileServiceImpl implements IFileService {
         String webSaveFilePath = fileRootPath + userName + "/" + path;
         File files = new File(webSaveFilePath);
         if (!files.exists()) {
-            files.mkdir();
+            return fileMsgList;
         }
         File[] tempList = files.listFiles();
-        for (int i = 0; i < tempList.length; i++) {
-            if (tempList[i].isFile()) {
-                //                logger.warn("用户：" + userName + " 文件：" + tempList[i]);
+        if (tempList == null) {
+            return fileMsgList;
+        }
+        for (File file : tempList) {
+            if (file.isFile()) {
                 FileMsg fileMsg = new FileMsg();
                 // 获取文件名和下载地址
-                String link = tempList[i].toString().replace("\\", "/");
+                String link = file.toString().replace("\\", "/");
                 String[] nameArr = link.split("/");
                 String name = nameArr[nameArr.length - 1];
                 link = link.replace(fileRootPath, "/data/");
                 link = link.replace("/root/pan/", "/data/");
-                String size = fileSizeToString(tempList[i].length());
+                String size = fileSizeToString(file.length());
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String lastModTime = formatter.format(tempList[i].lastModified());
+                String lastModTime = formatter.format(file.lastModified());
                 // 赋值到json
                 fileMsg.setName(name);
                 fileMsg.setLink(link);
                 fileMsg.setSize(size);
                 fileMsg.setTime(lastModTime);
+                if (isMp4(name)) {
+                    fileMsg.setType("mp4");
+                } else if (isVideo(name)) {
+                    fileMsg.setType("video");
+                } else {
+                    fileMsg.setType("file");
+                }
                 fileMsgList.add(fileMsg);
             } else {
                 FileMsg fileMsg = new FileMsg();
-                String link = tempList[i].toString().replace("\\", "/");
+                String link = file.toString().replace("\\", "/");
                 String[] nameArr = link.split("/");
                 String name = nameArr[nameArr.length - 1];
+                String dirPath = link.replace(fileRootPath + userName, "");
                 if (!name.equals("userIcon")) {
                     fileMsg.setName(name);
                     fileMsg.setSize("Directory");
+                    fileMsg.setType("dir");
+                    fileMsg.setLink(dirPath);
                     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    String lastModTime = formatter.format(tempList[i].lastModified());
+                    String lastModTime = formatter.format(file.lastModified());
                     fileMsg.setTime(lastModTime);
                     fileMsgList.add(fileMsg);
                 }
             }
         }
         //排序
+        ListUtil.listSort(fileMsgList);
+        return fileMsgList;
+    }
+
+    /**
+     * 展示path目录下的全部文件信息
+     *
+     * @param path 文件完全路径
+     * @param userName 用户名
+     * @return FileMsg List
+     */
+    @Override
+    public List<FileMsg> list(String path, String userName) {
+        List<FileMsg> fileMsgList = new ArrayList<>();
+        File files = new File(path);
+        if (!files.exists()) {
+            return fileMsgList;
+        }
+        File[] tempList = files.listFiles();
+        if (tempList == null) {
+            return fileMsgList;
+        }
+        // 遍历每个文件转json对象
+        for (File file : tempList) {
+            fileMsgList.add(fileToFileMsg(file, userName, fileRootPath, "/data/"));
+        }
+        // 排序规则：文件夹在前，文件在后，更新时间最近的在前
         ListUtil.listSort(fileMsgList);
         return fileMsgList;
     }
@@ -191,7 +233,8 @@ public class FileServiceImpl implements IFileService {
             }
 
             //                if (!b1){
-            //                    FileSave fileSave=saveService.findFileSaveByUserNameAndFileName(userName,fileNames[i]);
+            //                    FileSave fileSave=saveService.findFileSaveByUserNameAndFileName(userName,
+            //                    fileNames[i]);
             //                    saveService.delete(fileSave);
             //                    b1=true;
             //                }
@@ -206,14 +249,14 @@ public class FileServiceImpl implements IFileService {
         // 重命名-本地磁盘文件
         String oldNameWithPath;
         String newNameWithPath;
-        if ("@dir@".equals(oldName)){
+        if ("@dir@".equals(oldName)) {
             oldNameWithPath = stringSlashToOne(fileRootPath + userName + "/" + path);
-            newNameWithPath = oldNameWithPath.substring(0, (int)getfilesuffix(oldNameWithPath, true, "/")) + "/" + newName;
+            newNameWithPath =
+                    oldNameWithPath.substring(0, (int) getfilesuffix(oldNameWithPath, true, "/")) + "/" + newName;
             newNameWithPath = stringSlashToOne(newNameWithPath);
-        }
-        else {
-            oldNameWithPath = stringSlashToOne(fileRootPath + userName + "/" + path + "/"  + oldName);
-            newNameWithPath = stringSlashToOne(fileRootPath + userName + "/" + path + "/"  + newName);
+        } else {
+            oldNameWithPath = stringSlashToOne(fileRootPath + userName + "/" + path + "/" + oldName);
+            newNameWithPath = stringSlashToOne(fileRootPath + userName + "/" + path + "/" + newName);
         }
         return renameFile(oldNameWithPath, newNameWithPath);
     }
@@ -289,9 +332,10 @@ public class FileServiceImpl implements IFileService {
     public boolean userFileDirMove(String fileName, String oldPath, String newPath, String userName) {
         // 移动-本地磁盘文件
         String saveFilePath = fileRootPath + userName + "/";
-        String lfilename = ("@dir@".equals(fileName)? "" : "/" + fileName);
+        String lfilename = ("@dir@".equals(fileName) ? "" : "/" + fileName);
         String oldNameWithPath = stringSlashToOne(saveFilePath + oldPath + lfilename);
-        String tmpnewfilename = "@dir@".equals(fileName)? (String)getfilesuffix(oldNameWithPath, false, "/", false): "";
+        String tmpnewfilename = "@dir@".equals(fileName) ?
+                (String) getfilesuffix(oldNameWithPath, false, "/", false) : "";
         String newNameWithPath = stringSlashToOne(saveFilePath + newPath + lfilename + tmpnewfilename);
         return renameFile(oldNameWithPath, newNameWithPath);
     }

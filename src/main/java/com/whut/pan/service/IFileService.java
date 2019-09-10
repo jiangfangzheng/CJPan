@@ -21,6 +21,8 @@ public interface IFileService {
     // 列出用户文件
     List<FileMsg> userFileList(String userName, String path);
 
+    List<FileMsg> list(String path, String userName);
+
     // 删除文件
     Boolean[] userFileDelete(String fileName, String userName, String path);
 

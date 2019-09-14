@@ -11,7 +11,6 @@
   "author": "Sandeepin",
   "license": "ISC",
   "devDependencies": {
-    "react-dplayer": "^0.3.3",
     "umi": "^2.0.3",
     "umi-plugin-react": "^1.0.3"
   },

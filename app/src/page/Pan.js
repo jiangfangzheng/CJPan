@@ -1,4 +1,4 @@
-import {Breadcrumb, Button, Icon, Input, message, Modal, Table, Tree, Upload} from 'antd';
+import {Breadcrumb, Button, Icon, Input, message, Modal, Progress, Table, Tree, Upload} from 'antd';
 import reqwest from 'reqwest';
 import DPlayer from "react-dplayer";
 
@@ -10,22 +10,30 @@ export default () => {
 class Pan extends React.Component {
     state = {
         dataSource: [],
-        selectedRowKeys: [], // Check here to configure the default column
+        selectedRowKeys: [],
+        selectedItems: [],
         refreshLoading: false,
         deleteLoading: false,
         newDirLoading: false,
         moveLoading: false,
+        renameLoading: false,
         visibleUpdate: false,
         visibleVideo: false,
         visibleMove: false,
         visibleNewDir: false,
+        visibleRename: false,
         dirLists: ['Home'],
         movieFileName: "null.null",
         currentPath: "/",
         videoUrl: "/",
+        freeSpace: 100,
+        totalSpace: 100,
+        usageRate: 0,
     };
 
     newDirName = "";
+
+    newFileName = "";
 
     // 表格列的项目
     columns = [
@@ -34,7 +42,8 @@ class Pan extends React.Component {
             dataIndex: 'name',
             render: (text, record) =>
                 <div>
-                    {record.type == "dir" ? <Icon type="folder-open" theme="filled" /> : <Icon type="file" theme="filled" />}
+                    {record.type == "dir" ? <Icon type="folder-open" theme="filled"/> :
+                        <Icon type="file" theme="filled"/>}
                     <a onClick={() => this.onClickName(record)}> {text}</a>
                 </div>
             ,
@@ -53,6 +62,8 @@ class Pan extends React.Component {
 
     // 页面初始加载处理
     componentDidMount() {
+        // 载入磁盘容量信息
+        this.getSpaceSize();
         // 载入根目录文件列表
         this.getFileList("/");
     }
@@ -85,13 +96,53 @@ class Pan extends React.Component {
             message.error(`载入文件列表失败！`);
             setTimeout(() => {
                 this.setState({
-                    dataSource: [],
+                    dataSource: [{
+                        "key": "5099331801568296745393",
+                        "name": "测试",
+                        "link": "/测试",
+                        "size": "Directory",
+                        "time": "2019-09-10 23:23:00",
+                        "type": "dir",
+                        "description": null,
+                        "transcode": "noneed"
+                    }],
                     currentPath: path,
                     dirLists: pathArr,
                     refreshLoading: false,
                 });
             }, 250);
-        }).always((resp) =>  {
+        }).always((resp) => {
+            console.log("always:", resp);
+        });
+    };
+
+
+    // 获取磁盘容量信息
+    getSpaceSize = () => {
+        console.log('getSpaceSize()');
+        reqwest({
+            url: '/getspacesize',
+            method: 'get',
+            type: 'json',
+            contentType: 'application/json;charset=UTF-8',
+        }).then(data => {
+            console.log("rsp:", data);
+            if (data.success == true) {
+                let msg = data.msg;
+                console.log("data.msg:", data.msg);
+                let msgJson = JSON.parse(data.msg);
+                console.log("data.msg.freeSpace:", msgJson.freeSpace);
+                console.log("data.msg.totalSpace:", msgJson.totalSpace);
+                let usedSpace = msgJson.totalSpace - msgJson.freeSpace;
+                this.setState({
+                    freeSpace: msgJson.freeSpace,
+                    totalSpace: msgJson.totalSpace,
+                    usageRate: (usedSpace / msgJson.totalSpace * 100).toFixed(2),
+                });
+            }
+        }).fail((err, msg) => {
+            console.log("fail:", msg, err);
+        }).always((resp) => {
             console.log("always:", resp);
         });
     };
@@ -107,20 +158,44 @@ class Pan extends React.Component {
         return pathArr;
     };
 
-    start = () => {
+    // 点击删除按钮处理事件
+    onClickDelete = () => {
         this.setState({deleteLoading: true});
-        // ajax request after empty completing
+        console.log("删除的文件：", this.state.selectedItems);
         setTimeout(() => {
+            message.error(`删除文件失败！`);
             this.setState({
                 selectedRowKeys: [],
                 deleteLoading: false,
             });
-        }, 1000);
+        }, 250);
     };
 
+    // 点击分享按钮处理事件
+    onClickShare = () => {
+        console.log("onClickShare()");
+    };
+
+    // 表格勾选项变化事件
     onSelectChange = selectedRowKeys => {
         console.log('selectedRowKeys changed: ', selectedRowKeys);
-        this.setState({selectedRowKeys});
+        let result = this.getSelectItemByKey(selectedRowKeys);
+        console.log(result);
+        this.setState({
+            selectedRowKeys,
+            selectedItems: result,
+        });
+    };
+
+    getSelectItemByKey = (key) => {
+        let items = this.state.dataSource;
+        let result = [];
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].key == key) {
+                result.push(items[i]);
+            }
+        }
+        return result;
     };
 
     // 显示上传文件弹出框
@@ -255,30 +330,103 @@ class Pan extends React.Component {
             data: JSON.stringify(json),
         }).then(data => {
             console.log("rsp:", data);
-        }).fail((err, msg) => {
-            console.log("fail:", msg, err);
-            message.error(`新建文件夹失败！`);
-        }).always((resp) => {
-            console.log("always:", resp);
+            this.newDirName = "";
             setTimeout(() => {
                 this.setState({
                     visibleNewDir: false,
                     newDirLoading: false,
                 });
             }, 250);
+        }).fail((err, msg) => {
+            console.log("fail:", msg, err);
+            message.error(`新建文件夹失败！`);
+            setTimeout(() => {
+                this.setState({
+                    newDirLoading: false,
+                });
+            }, 250);
+        }).always((resp) => {
+            console.log("always:", resp);
         });
     };
 
     // 新建文件夹弹出框 取消 按钮事件
     handleNewDirCancel = () => {
+        this.newDirName = "";
         this.setState({
             visibleNewDir: false,
         });
     };
 
+    // 新建文件夹名字输入框变化事件
     onChangeNewDir = e => {
         console.log(e.target.value);
         this.newDirName = e.target.value;
+    };
+
+    // 重命名按钮点击事件
+    onClickRename = () => {
+        this.setState({
+            visibleRename: true,
+        });
+    };
+
+    // 重命名名字输入框变化事件
+    onChangeRemane = e => {
+        console.log(e.target.value);
+        this.newFileName = e.target.value;
+    };
+
+    // 重命名弹出框 确认 按钮事件
+    handleRenameOk = () => {
+        console.log("原名字：", this.state.selectedItems[0].name);
+        console.log("新名字：", this.newFileName);
+        if (this.newFileName == "") {
+            message.error(`文件名为空！`);
+            return;
+        }
+        this.setState({
+            renameLoading: true,
+        });
+        console.log("handleRenameOk()");
+        let json = {
+            name: this.newFileName,
+            path: this.state.currentPath,
+        };
+        reqwest({
+            url: '/rest/pan/rename',
+            method: 'post',
+            type: 'json',
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify(json),
+        }).then(data => {
+            console.log("rsp:", data);
+            this.newFileName = "";
+            setTimeout(() => {
+                this.setState({
+                    visibleRename: false,
+                    renameLoading: false,
+                });
+            }, 250);
+        }).fail((err, msg) => {
+            console.log("fail:", msg, err);
+            message.error(`重命名文件失败！`);
+            setTimeout(() => {
+                this.setState({
+                    renameLoading: false,
+                });
+            }, 250);
+        }).always((resp) => {
+            console.log("always:", resp);
+        });
+    };
+
+    // 重命名弹出框 取消 按钮事件
+    handleRenameCancel = () => {
+        this.newFileName = "";
+        this.setState({
+            visibleRename: false,
+        });
     };
 
     render() {
@@ -288,6 +436,7 @@ class Pan extends React.Component {
             onChange: this.onSelectChange,
         };
         const hasSelected = selectedRowKeys.length > 0;
+        const hasSelectedOne = selectedRowKeys.length == 1;
 
         // 上传文件
         const props = {
@@ -315,12 +464,17 @@ class Pan extends React.Component {
                     <Button type="primary" style={{marginRight: 8}} onClick={this.showModalUpdate}>上传</Button>
                     <Button style={{marginRight: 8}} onClick={this.onClickRefresh}>刷新</Button>
                     <Button style={{marginRight: 8}} onClick={this.onClickNewDir}>新建文件夹</Button>
-                    <Button style={{marginRight: 8}} onClick={this.start} disabled={!hasSelected}>重命名</Button>
-                    <Button style={{marginRight: 8}} onClick={this.start} disabled={!hasSelected}>分享</Button>
-                    <Button type="danger" style={{marginRight: 8}} onClick={this.start} disabled={!hasSelected}
+                    <Button style={{marginRight: 8}} onClick={this.onClickRename}
+                            disabled={!hasSelectedOne}>重命名</Button>
+                    <Button style={{marginRight: 8}} onClick={this.onClickShare} disabled={!hasSelectedOne}>分享</Button>
+                    <Button type="danger" style={{marginRight: 8}} onClick={this.onClickDelete} disabled={!hasSelected}
                             loading={this.state.deleteLoading}>删除</Button>
                     <Button onClick={this.moveOnClick} disabled={!hasSelected}
                             loading={this.state.moveLoading}>移动</Button>
+                    <div style={{float: "right", width: "180px"}}>
+                        总共:{this.state.totalSpace}G 剩余:{this.state.freeSpace}G
+                        <Progress percent={this.state.usageRate} status="active"/>
+                    </div>
 
                     {/*上传界面弹出框*/}
                     <Modal
@@ -366,7 +520,20 @@ class Pan extends React.Component {
                         destroyOnClose={true}
                     >
                         <p>新建文件夹路径：{this.state.currentPath}</p>
-                        <Input placeholder="请输入文件夹名…" allowClear onChange={this.onChangeNewDir} />
+                        <Input placeholder="请输入文件夹名…" allowClear onChange={this.onChangeNewDir}/>
+                    </Modal>
+
+                    {/*重命名弹出框*/}
+                    <Modal
+                        title="重命名"
+                        visible={this.state.visibleRename}
+                        onOk={this.handleRenameOk}
+                        confirmLoading={this.state.renameLoading}
+                        onCancel={this.handleRenameCancel}
+                        destroyOnClose={true}
+                    >
+                        <p>原名字：{this.state.selectedItems.length > 0 ? this.state.selectedItems[0].name : ""}</p>
+                        <Input placeholder="请输入新名字…" allowClear onChange={this.onChangeRemane}/>
                     </Modal>
 
                     {/*移动界面弹出框*/}
@@ -382,7 +549,7 @@ class Pan extends React.Component {
                         <Button type="primary">确认</Button> 移动到：。。。
                         <MoveTree/>
                     </Modal>
-                    <span style={{marginLeft: 8}}>{hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}</span>
+                    <span style={{marginLeft: 8}}>{hasSelected ? `已选择 ${selectedRowKeys.length} 项` : ''}</span>
                 </div>
                 {/*目录导航面包屑*/}
                 <Breadcrumb>
@@ -401,6 +568,7 @@ class Pan extends React.Component {
 
 // 移动操作的展示树
 const {TreeNode} = Tree;
+
 class MoveTree extends React.Component {
     state = {
         treeData: [

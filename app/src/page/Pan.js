@@ -116,12 +116,11 @@ class Pan extends React.Component {
         });
     };
 
-
     // 获取磁盘容量信息
     getSpaceSize = () => {
         console.log('getSpaceSize()');
         reqwest({
-            url: '/getspacesize',
+            url: '/rest/pan/space',
             method: 'get',
             type: 'json',
             contentType: 'application/json;charset=UTF-8',
@@ -162,13 +161,44 @@ class Pan extends React.Component {
     onClickDelete = () => {
         this.setState({deleteLoading: true});
         console.log("删除的文件：", this.state.selectedItems);
-        setTimeout(() => {
+        let selectedData = this.state.selectedItems;
+        // 构造请求json体
+        let deleteJson = [];
+        for (let i = 0; i < selectedData.length; i++) {
+            deleteJson.push({
+                name: selectedData[i].name,
+                path: this.state.currentPath + "/"
+            })
+        }
+        console.log("删除的文件josn：", deleteJson);
+        reqwest({
+            url: '/rest/pan/delete',
+            method: 'delete',
+            type: 'json',
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify(deleteJson),
+        }).then(data => {
+            console.log("rsp:", data);
+            if (data.success == true) {
+                setTimeout(() => {
+                    this.setState({
+                        deleteLoading: false,
+                    });
+                }, 250);
+                this.getFileList(this.state.currentPath);
+            } else {
+                message.error(`删除文件失败！`);
+            }
+        }).fail((err, msg) => {
+            console.log("fail:", msg, err);
             message.error(`删除文件失败！`);
+        }).always((resp) => {
+            console.log("always:", resp);
             this.setState({
+                selectedItems: [],
                 selectedRowKeys: [],
-                deleteLoading: false,
             });
-        }, 250);
+        });
     };
 
     // 点击分享按钮处理事件
@@ -191,8 +221,10 @@ class Pan extends React.Component {
         let items = this.state.dataSource;
         let result = [];
         for (let i = 0; i < items.length; i++) {
-            if (items[i].key == key) {
-                result.push(items[i]);
+            for (let j = 0; j < key.length; j++) {
+                if (items[i].key == key[j]) {
+                    result.push(items[i]);
+                }
             }
         }
         return result;
@@ -277,6 +309,10 @@ class Pan extends React.Component {
     // 刷新按钮点击事件
     onClickRefresh = () => {
         this.getFileList(this.state.currentPath);
+        this.setState({
+            selectedItems: [],
+            selectedRowKeys: [],
+        });
     };
 
     // 新建文件夹按钮点击事件
@@ -379,8 +415,10 @@ class Pan extends React.Component {
 
     // 重命名弹出框 确认 按钮事件
     handleRenameOk = () => {
-        console.log("原名字：", this.state.selectedItems[0].name);
-        console.log("新名字：", this.newFileName);
+        let oldName = this.state.currentPath + "/" + this.state.selectedItems[0].name;
+        let newName = this.state.currentPath + "/" + this.newFileName;
+        console.log("原名字before：", oldName);
+        console.log("新名字after：", newName);
         if (this.newFileName == "") {
             message.error(`文件名为空！`);
             return;
@@ -390,12 +428,12 @@ class Pan extends React.Component {
         });
         console.log("handleRenameOk()");
         let json = {
-            name: this.newFileName,
-            path: this.state.currentPath,
+            before: oldName,
+            after: newName,
         };
         reqwest({
             url: '/rest/pan/rename',
-            method: 'post',
+            method: 'put',
             type: 'json',
             contentType: 'application/json;charset=UTF-8',
             data: JSON.stringify(json),
@@ -406,8 +444,11 @@ class Pan extends React.Component {
                 this.setState({
                     visibleRename: false,
                     renameLoading: false,
+                    selectedItems: [],
+                    selectedRowKeys: [],
                 });
             }, 250);
+            this.getFileList(this.state.currentPath);
         }).fail((err, msg) => {
             console.log("fail:", msg, err);
             message.error(`重命名文件失败！`);
@@ -426,6 +467,8 @@ class Pan extends React.Component {
         this.newFileName = "";
         this.setState({
             visibleRename: false,
+            selectedItems: [],
+            selectedRowKeys: [],
         });
     };
 

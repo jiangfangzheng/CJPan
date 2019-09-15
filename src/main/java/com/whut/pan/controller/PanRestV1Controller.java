@@ -204,28 +204,13 @@ public class PanRestV1Controller {
         logger.warn("oldName:{} newName:{}", renameMsg.getBefore(), renameMsg.getAfter());
         File oldName = new File(root + userName + "/" + renameMsg.getBefore());
         File newName = new File(root + userName + "/" + renameMsg.getAfter());
-        if (renameMsg.getBefore().endsWith("/")) {
-            // 重命名目录
-            logger.warn("重命名目录");
-            try {
-                FileUtils.moveDirectory(oldName, newName);
-            } catch (IOException e) {
-                logger.error("rename IOException.");
-            }
+        logger.warn("重命名文件");
+        if (oldName.renameTo(newName)) {
+            logger.warn("已重命名");
         } else {
-            // 重命名文件
-            logger.warn("重命名文件");
-            if (oldName.renameTo(newName)) {
-                logger.warn("已重命名");
-            } else {
-                logger.error("rename Error.");
-            }
+            logger.error("rename Error.");
         }
-//        try {
-//            FileUtils.forceMkdir(new File(root + userName + "/" + newName));
-//        } catch (IOException e) {
-//            logger.error("rename() IOException! rename:{}", newName);
-//        }
+
         ResponseMsg responseMsg = new ResponseMsg();
         responseMsg.setSuccess(true);
         responseMsg.setMsg(renameMsg.getAfter());

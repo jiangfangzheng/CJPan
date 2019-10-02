@@ -32,7 +32,7 @@ public class FileMsg {
     private String transcode = "noneed";
 
     public FileMsg() {
-        this.key = String.valueOf(this.hashCode()) + System.currentTimeMillis();
+        this.key = UUID.randomUUID().toString();
     }
 
     public String getSize() {

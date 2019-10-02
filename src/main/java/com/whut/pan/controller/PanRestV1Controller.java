@@ -34,6 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.whut.pan.util.FileUtil.getFileNameByContentDisposition;
+import static com.whut.pan.util.FileUtil.writeInputStreamToFile;
 import static com.whut.pan.util.WebUtil.getUserNameByRequest;
 
 /**
@@ -45,15 +47,17 @@ import static com.whut.pan.util.WebUtil.getUserNameByRequest;
 @RestController
 @RequestMapping(value = "/rest/pan")
 public class PanRestV1Controller {
-
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * 文件目录
+     * 文件根目录
      */
     @Value("${fileRootPath}")
     private String root;
 
+    /**
+     * file业务处理bean
+     */
     @Autowired
     private IFileService fileService;
 
@@ -65,7 +69,7 @@ public class PanRestV1Controller {
      * @return result
      */
     @RequestMapping("upload")
-    public Object upload(@RequestParam String path, HttpServletRequest request) {
+    public ResponseMsg upload(@RequestParam String path, HttpServletRequest request) {
         try {
             // Servlet3.0方式上传文件
             Collection<Part> parts = request.getParts();
@@ -74,52 +78,16 @@ public class PanRestV1Controller {
                 if (part.getContentType() != null) {
                     String fullPath = root + "sandeepin/" + path;
                     System.out.println("fullPath:" + fullPath);
-                    File f = new File(fullPath, getFileName(part.getHeader("content-disposition")));
-                    if (!write(part.getInputStream(), f)) {
+                    File f = new File(fullPath, getFileNameByContentDisposition(part.getHeader("content-disposition")));
+                    if (!writeInputStreamToFile(part.getInputStream(), f)) {
                         throw new Exception("文件上传失败");
                     }
                 }
             }
-//            return success();
+            return new ResponseMsg("upload successful!");
         } catch (Exception e) {
-//            return error(e.getMessage());
+            return new ResponseMsg();
         }
-        return "";
-    }
-
-    public static String getFileName(String header) {
-        String[] tempArr1 = header.split(";");
-        String[] tempArr2 = tempArr1[2].split("=");
-        // 获取文件名，兼容各种浏览器的写法
-        return tempArr2[1].substring(tempArr2[1].lastIndexOf("\\") + 1).replaceAll("\"", "");
-    }
-
-    public static boolean write(InputStream inputStream, File f) {
-        boolean ret = false;
-
-        try (OutputStream outputStream = new FileOutputStream(f)) {
-
-            int read;
-            byte[] bytes = new byte[1024];
-
-            while ((read = inputStream.read(bytes)) != -1) {
-                outputStream.write(bytes, 0, read);
-            }
-            ret = true;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return ret;
     }
 
     /**
@@ -128,7 +96,6 @@ public class PanRestV1Controller {
      * @param request HttpServletRequest
      */
     @GetMapping(value = "/space")
-    @ResponseBody
     public ResponseMsg getSpaceSize(HttpServletRequest request) {
         // 普通用户限制80G，guest用户限制40G，
         String userName = getUserNameByRequest(request);
@@ -144,12 +111,8 @@ public class PanRestV1Controller {
         String usedeSpace = String.format("%.2f", dirlengthDouble);
         String freeSpace = String.format("%.2f", totalSpace - Double.parseDouble(usedeSpace));
         spaceMap.put("freeSpace", freeSpace);
-        ResponseMsg responseMsg = new ResponseMsg();
-        responseMsg.setSuccess(true);
-        responseMsg.setMsg(JSONObject.toJSONString(spaceMap));
-        return responseMsg;
+        return new ResponseMsg(JSONObject.toJSONString(spaceMap));
     }
-
 
     /**
      * 用户文件列表展示
@@ -185,10 +148,7 @@ public class PanRestV1Controller {
         } catch (IOException e) {
             logger.error("newDir() IOException! newDir:{}", newDir);
         }
-        ResponseMsg responseMsg = new ResponseMsg();
-        responseMsg.setSuccess(true);
-        responseMsg.setMsg(dirMsg.getPath() + "/" + dirMsg.getName());
-        return responseMsg;
+        return new ResponseMsg(dirMsg.getPath() + "/" + dirMsg.getName());
     }
 
     /**
@@ -210,11 +170,7 @@ public class PanRestV1Controller {
         } else {
             logger.error("rename Error.");
         }
-
-        ResponseMsg responseMsg = new ResponseMsg();
-        responseMsg.setSuccess(true);
-        responseMsg.setMsg(renameMsg.getAfter());
-        return responseMsg;
+        return new ResponseMsg(renameMsg.getAfter());
     }
 
     /**
@@ -236,9 +192,29 @@ public class PanRestV1Controller {
                 logger.error("delete() IOException! file:{}", path);
             }
         });
-        ResponseMsg responseMsg = new ResponseMsg();
-        responseMsg.setSuccess(true);
-        responseMsg.setMsg("delete successful.");
-        return responseMsg;
+        return new ResponseMsg("delete successful.");
+    }
+
+    /**
+     * 移动文件或目录(批量)
+     *
+     * @param msgList 移动前后的名字jsonList
+     * @param request HttpServletRequest
+     * @return ResponseMsg
+     */
+    @PutMapping(value = "/move", produces = "application/json; charset=utf-8")
+    public ResponseMsg move(@RequestBody List<RenameMsg> msgList, HttpServletRequest request) {
+        String userName = getUserNameByRequest(request);
+        msgList.forEach(e -> {
+            String msg = e.getBefore() + " to " + e.getAfter();
+            logger.warn("move() file:{}", msg);
+            try {
+                // todo
+                FileUtils.forceDelete(new File(root + userName + "/" + msg));
+            } catch (IOException ex) {
+                logger.error("delete() IOException! file:{}", msg);
+            }
+        });
+        return new ResponseMsg("move successful.");
     }
 }

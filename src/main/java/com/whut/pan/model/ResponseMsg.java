@@ -6,9 +6,31 @@ package com.whut.pan.model;
  * @author Sandeepin
  */
 public class ResponseMsg {
-    private boolean success = false;
+    private boolean success;
 
-    private String msg = "";
+    private String msg;
+
+    /**
+     * 无参构造函数默认失败
+     */
+    public ResponseMsg() {
+        this.success = false;
+        this.msg = "";
+    }
+
+    public ResponseMsg(boolean success, String msg) {
+        this.success = success;
+        this.msg = msg;
+    }
+
+    /**
+     * 填入信息默认成功
+     * @param msg msg
+     */
+    public ResponseMsg(String msg) {
+        this.success = true;
+        this.msg = msg;
+    }
 
     public boolean isSuccess() {
         return success;

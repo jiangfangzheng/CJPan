@@ -7,6 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 
 import static com.whut.pan.util.StringUtil.getfilesuffix;
@@ -266,4 +270,47 @@ public class FileUtil {
         }
         return fileMsg;
     }
+
+    /**
+     * 输入流保存为文件
+     *
+     * @param inputStream 输入流
+     * @param f 文件
+     * @return boolean
+     */
+    public static boolean writeInputStreamToFile(InputStream inputStream, File f) {
+        boolean ret = false;
+        try (OutputStream outputStream = new FileOutputStream(f)) {
+            int read;
+            byte[] bytes = new byte[1024];
+            while ((read = inputStream.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, read);
+            }
+            ret = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    logger.error("writeInputStreamToFile() IOException!");
+                }
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * 从content-disposition头部获取提取文件名
+     * @param header header
+     * @return String
+     */
+    public static String getFileNameByContentDisposition(String header) {
+        String[] tempArr1 = header.split(";");
+        String[] tempArr2 = tempArr1[2].split("=");
+        // 获取文件名，兼容各种浏览器的写法
+        return tempArr2[1].substring(tempArr2[1].lastIndexOf("\\") + 1).replaceAll("\"", "");
+    }
+
 }

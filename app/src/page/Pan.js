@@ -127,7 +127,6 @@ class Pan extends React.Component {
         }).then(data => {
             console.log("rsp:", data);
             if (data.success == true) {
-                let msg = data.msg;
                 console.log("data.msg:", data.msg);
                 let msgJson = JSON.parse(data.msg);
                 console.log("data.msg.freeSpace:", msgJson.freeSpace);
